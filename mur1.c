@@ -98,12 +98,14 @@ char *descripcio[] = {
 
 pthread_t tid[MAX_THREADS];	/* tabla de identificadors de threads */
 
+char id = 1;
+
 int n_fil, n_col;		/* numero de files i columnes del taulell */
 int m_por;			/* mida de la porteria (en caracters) */
 int f_pal, c_pal;		/* posicio del primer caracter de la paleta */
-int f_pil, c_pil;		/* posicio de la pilota, en valor enter */
-float pos_f, pos_c;		/* posicio de la pilota, en valor real */
-float vel_f, vel_c;		/* velocitat de la pilota, en valor real */
+int f_pil[MAXBALLS], c_pil[MAXBALLS];		/* posicio de la pilota, en valor enter */
+float pos_f[MAXBALLS], pos_c[MAXBALLS];		/* posicio de la pilota, en valor real */
+float vel_f[MAXBALLS], vel_c[MAXBALLS];		/* velocitat de la pilota, en valor real */
 int nblocs = 0;
 int dirPaleta = 0;
 int retard;			/* valor del retard de moviment, en mil.lisegons */
@@ -216,6 +218,7 @@ int inicialitza_joc(void)
 		win_escricar(f_pal, c_pal + i, '0', INVERS);
 
 	/* generar la pilota */
+//for i=o i<MAXPILOTES i++
 	if (pos_f > n_fil - 1)
 		pos_f = n_fil - 1;					/* limita posicio inicial de la pilota */
 	if (pos_c > n_col - 1)
@@ -285,6 +288,12 @@ void comprovar_bloc(int f, int c)
 
 	if (quin == BLKCHAR || quin == FRNTCHAR) 
 	{
+		/* TODO: generar nova pilota */
+		if (quin == BLKCHAR)
+		{
+			pthread_create(&tid[id-1],NULL, &mou_pilota , (char *) id);
+			id++;
+		}
 		col = c;
 		while (win_quincar(f, col) != ' ') 
 		{
@@ -297,8 +306,6 @@ void comprovar_bloc(int f, int c)
 			win_escricar(f, col, ' ', NO_INV);
 			col--;
 		}
-
-		/* TODO: generar nova pilota */
 
 		nblocs--;
 	}
@@ -369,63 +376,64 @@ void * mou_pilota(void * index)
 	int f_h, c_h;
 	char rh, rv, rd;
 	int fora = 0;
-
+	char = index;
+	printf("%c", index);
 	do{									/* Bucle pelota1 */
-		f_h = pos_f + vel_f;						/* posicio hipotetica de la pilota (entera) */
-		c_h = pos_c + vel_c;
+		f_h = pos_f[index-1] + vel_f[index-1];				/* posicio hipotetica de la pilota (entera) */
+		c_h = pos_c[index-1] + vel_c[index-1];
 		rh = rv = rd = ' ';
-		if ((f_h != f_pil) || (c_h != c_pil)) 
+		if ((f_h != f_pil[index-1]) || (c_h != c_pil[index-1])) 
 		{
 		/* si posicio hipotetica no coincideix amb la posicio actual */
-			if (f_h != f_pil) 					/* provar rebot vertical */
+			if (f_h != f_pil[index-1]) 					/* provar rebot vertical */
 			{					
-				rv = win_quincar(f_h, c_pil);			/* veure si hi ha algun obstacle */
+				rv = win_quincar(f_h, c_pil[index-1]);			/* veure si hi ha algun obstacle */
 				if (rv != ' ') 					/* si hi ha alguna cosa */
 				{	
-					comprovar_bloc(f_h, c_pil);
+					comprovar_bloc(f_h, c_pil[index-1]);
 					if (rv == '0')				/* col.lisió amb la paleta? */
 						/* XXX: tria la funció que vulgis o implementa'n una millor */
 						control_impacte();
-	//					vel_c = control_impacte2(c_pil, vel_c);
-					vel_f = -vel_f;				/* canvia sentit velocitat vertical */
-					f_h = pos_f + vel_f;			/* actualitza posicio hipotetica */
+	//					vel_c[index-1] = control_impacte2(c_pil[index-1], vel_c[index-1]);
+					vel_f[index-1] = -abs(vel_f[index-1]);				/* canvia sentit velocitat vertical */
+					f_h = pos_f[index-1] + vel_f[index-1];			/* actualitza posicio hipotetica */
 				}
 			}
-			if (c_h != c_pil) {	/* provar rebot horitzontal */
-				rh = win_quincar(f_pil, c_h);	/* veure si hi ha algun obstacle */
+			if (c_h != c_pil[index-1]) {	/* provar rebot horitzontal */
+				rh = win_quincar(f_pil[index-1], c_h);	/* veure si hi ha algun obstacle */
 				if (rh != ' ') {	/* si hi ha algun obstacle */
-					comprovar_bloc(f_pil, c_h);
+					comprovar_bloc(f_pil[index-1], c_h);
 					/* TODO?: tractar la col.lisio lateral amb la paleta */
-					vel_c = -vel_c;	/* canvia sentit vel. horitzontal */
-					c_h = pos_c + vel_c;	/* actualitza posicio hipotetica */
+					vel_c[index-1] = -abs(vel_c[index-1]);	/* canvia sentit vel. horitzontal */
+					c_h = pos_c[index-1] + vel_c[index-1];	/* actualitza posicio hipotetica */
 				}
 			}
-			if ((f_h != f_pil) && (c_h != c_pil)) {	/* provar rebot diagonal */
+			if ((f_h != f_pil[index-1]) && (c_h != c_pil[index-1])) {	/* provar rebot diagonal */
 				rd = win_quincar(f_h, c_h);
 				if (rd != ' ') {	/* si hi ha obstacle */
 					comprovar_bloc(f_h, c_h);
 					/* TODO?: tractar la col.lisio amb la paleta */
-					vel_f = -vel_f;
-					vel_c = -vel_c;	/* canvia sentit velocitats */
-					f_h = pos_f + vel_f;
-					c_h = pos_c + vel_c;	/* actualitza posicio entera */
+					vel_f[index-1] = -abs(vel_f[index-1]);
+					vel_c[index-1]= -abs(vel_c[index-1]);	/* canvia sentit velocitats */
+					f_h = pos_f[index-1] + vel_f[index-1];
+					c_h = pos_c[index-1] + vel_c[index-1];	/* actualitza posicio entera */
 				}
 			}
 			/* mostrar la pilota a la nova posició */
 			if (win_quincar(f_h, c_h) == ' ') {	/* verificar posicio definitiva *//* si no hi ha obstacle */
-				win_escricar(f_pil, c_pil, ' ', NO_INV);	/* esborra pilota */
-				pos_f += vel_f;
-				pos_c += vel_c;
-				f_pil = f_h;
-				c_pil = c_h;	/* actualitza posicio actual */
-				if (f_pil != n_fil - 1)	/* si no surt del taulell, */
-					win_escricar(f_pil, c_pil, '1', INVERS);	/* imprimeix pilota */
+				win_escricar(f_pil[index-1], c_pil[index-1], ' ', NO_INV);	/* esborra pilota */
+				pos_f[index-1] += vel_f[index-1];
+				pos_c[index-1] += vel_c[index-1];
+				f_pil[index-1] = f_h;
+				c_pil[index-1] = c_h;	/* actualitza posicio actual */
+				if (f_pil[index-1] != n_fil - 1)	/* si no surt del taulell, */
+					win_escricar(f_pil[index-1], c_pil[index-1], '1', INVERS);	/* imprimeix pilota */
 				else
 					fora = 1;
 			}
 		} else {	/* posicio hipotetica = a la real: moure */
-			pos_f += vel_f;
-			pos_c += vel_c;
+			pos_f[index-1] += vel_f[index-1];
+			pos_c[index-1] += vel_c[index-1];
 		}
 		fi2 = (nblocs==0 || fora);
 		win_retard(100);
@@ -505,8 +513,9 @@ int main(int n_args, char *ll_args[])
 	if (inicialitza_joc() != 0)	/* intenta crear el taulell de joc */
 		exit(4);	/* aborta si hi ha algun problema amb taulell */
 	
-	pthread_create(&tid[0],NULL, &mou_pilota , (char *) 1);
-	pthread_create(&tid[1],NULL, &mou_paleta, (void *) NULL);
+	pthread_create(&tid[id-1],NULL, &mou_pilota , (char *) id);
+	id++;
+	pthread_create(&tid[9],NULL, &mou_paleta, (void *) NULL);
 	clock_t inici_temps = clock();		/* variable tipo tiempo para tiempo inicial */
 	clock_t t_actual = clock();		/* variable tipo tiempo para tiempo actual */
 	int segons = 0, minuts = 0;		/* variable segundos y minutos inicializados a 0 */
