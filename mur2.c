@@ -230,8 +230,9 @@ int inicialitza_joc(void)
 			pos_c[i] = n_col - 1;
 		f_pil[i] = pos_f[i];
 		c_pil[i] = pos_c[i];							/* dibuixar la pilota inicialment */
-		win_escricar(f_pil[i], c_pil[i], i, INVERS);
+		/*win_escricar(f_pil[i], c_pil[i], i, INVERS);*/
 	}
+	win_escricar(f_pil[1], c_pil[1], '1', INVERS);
 	/* generar els blocs */
 	nb = 0;
 	nblocs = n_col / (BLKSIZE + BLKGAP) - 1;
@@ -264,7 +265,7 @@ int inicialitza_joc(void)
 	win_escristr(strin);
 	return (0);
 }
-
+	
 /* funcio que escriu un missatge a la línia d'estat i tanca les curses */
 void mostra_final(char *miss)
 {	
@@ -393,7 +394,6 @@ void * mou_pilota(void * index)
 	char rh, rv, rd;
 	int fora = 0;
 	int in = (intptr_t)index;
-	printf("%d", in);
 	do{									/* Bucle pelota */
 		f_h = pos_f[in] + vel_f[in];				/* posicio hipotetica de la pilota (entera) */
 		c_h = pos_c[in] + vel_c[in];
