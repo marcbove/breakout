@@ -98,7 +98,7 @@ char *descripcio[] = {
 
 pthread_t tid[MAX_THREADS];	/* tabla de identificadors de threads */
 
-char id = 1;
+int id = 1;
 int num_pilotes = 1;
 int n_fil, n_col;		/* numero de files i columnes del taulell */
 int m_por;			/* mida de la porteria (en caracters) */
@@ -280,43 +280,15 @@ void mostra_final(char *miss)
 	getchar();
 }
 
-/* Si hi ha una col.lisió pilota-bloci esborra el bloc */
-void comprovar_bloc(int f, int c)
-{
-	int col;
-	char quin = win_quincar(f, c);
 
-	if (quin == BLKCHAR || quin == FRNTCHAR) 
-	{
-		/* TODO: generar nova pilota */
-		if (quin == BLKCHAR)
-		{
-			pthread_create(&tid[id-1],NULL, &mou_pilota , (char *) id);
-			id++;
-		}
-		col = c;
-		while (win_quincar(f, col) != ' ') 
-		{
-			win_escricar(f, col, ' ', NO_INV);
-			col++;
-		}
-		col = c - 1;
-		while (win_quincar(f, col) != ' ') 
-		{
-			win_escricar(f, col, ' ', NO_INV);
-			col--;
-		}
-
-		nblocs--;
-	}
-}
 
 /* funcio per a calcular rudimentariament els efectes amb la pala */
 /* no te en compta si el moviment de la paleta no és recent */
 /* cal tenir en compta que després es calcula el rebot */
 void control_impacte(void) 
 {
-	for(char = 1; i <= num_pilotes; i++)
+	int i;
+	for(i = 1; i <= num_pilotes; i++)
 	{
 		if (dirPaleta == TEC_DRETA)
 		{
@@ -381,69 +353,101 @@ void * mou_pilota(void * index)
 	int f_h, c_h;
 	char rh, rv, rd;
 	int fora = 0;
-	char = index;
-	printf("%c", index);
+	int in = (int *)index;
+	printf("%d", in);
 	do{									/* Bucle pelota1 */
-		f_h = pos_f[index] + vel_f[index];				/* posicio hipotetica de la pilota (entera) */
-		c_h = pos_c[index] + vel_c[index];
+		f_h = pos_f[in] + vel_f[in];				/* posicio hipotetica de la pilota (entera) */
+		c_h = pos_c[in] + vel_c[in];
 		rh = rv = rd = ' ';
-		if ((f_h != f_pil[index]) || (c_h != c_pil[index])) 
+		if ((f_h != f_pil[in]) || (c_h != c_pil[in])) 
 		{
 		/* si posicio hipotetica no coincideix amb la posicio actual */
-			if (f_h != f_pil[index]) 					/* provar rebot vertical */
+			if (f_h != f_pil[in]) 					/* provar rebot vertical */
 			{					
-				rv = win_quincar(f_h, c_pil[index]);			/* veure si hi ha algun obstacle */
+				rv = win_quincar(f_h, c_pil[in]);			/* veure si hi ha algun obstacle */
 				if (rv != ' ') 					/* si hi ha alguna cosa */
 				{	
-					comprovar_bloc(f_h, c_pil[index]);
+					comprovar_bloc(f_h, c_pil[in]);
 					if (rv == '0')				/* col.lisió amb la paleta? */
 						/* XXX: tria la funció que vulgis o implementa'n una millor */
 						control_impacte();
 	//					vel_c[index] = control_impacte2(c_pil[index], vel_c[index]);
-					vel_f[index] = -vel_f[index];				/* canvia sentit velocitat vertical */
-					f_h = pos_f[index] + vel_f[index];			/* actualitza posicio hipotetica */
+					vel_f[in] = -vel_f[in];				/* canvia sentit velocitat vertical */
+					f_h = pos_f[in] + vel_f[in];			/* actualitza posicio hipotetica */
 				}
 			}
-			if (c_h != c_pil[index]) {	/* provar rebot horitzontal */
-				rh = win_quincar(f_pil[index], c_h);	/* veure si hi ha algun obstacle */
+			if (c_h != c_pil[in]) {	/* provar rebot horitzontal */
+				rh = win_quincar(f_pil[in], c_h);	/* veure si hi ha algun obstacle */
 				if (rh != ' ') {	/* si hi ha algun obstacle */
-					comprovar_bloc(f_pil[index], c_h);
+					comprovar_bloc(f_pil[in], c_h);
 					/* TODO?: tractar la col.lisio lateral amb la paleta */
-					vel_c[index] = -vel_c[index];	/* canvia sentit vel. horitzontal */
-					c_h = pos_c[index] + vel_c[index];	/* actualitza posicio hipotetica */
+					vel_c[in] = -vel_c[in];	/* canvia sentit vel. horitzontal */
+					c_h = pos_c[in] + vel_c[in];	/* actualitza posicio hipotetica */
 				}
 			}
-			if ((f_h != f_pil[index]) && (c_h != c_pil[index])) {	/* provar rebot diagonal */
+			if ((f_h != f_pil[in]) && (c_h != c_pil[in])) {	/* provar rebot diagonal */
 				rd = win_quincar(f_h, c_h);
 				if (rd != ' ') {	/* si hi ha obstacle */
 					comprovar_bloc(f_h, c_h);
 					/* TODO?: tractar la col.lisio amb la paleta */
-					vel_f[index] = -vel_f[index];
-					vel_c[index]= -vel_c[index];	/* canvia sentit velocitats */
-					f_h = pos_f[index] + vel_f[index];
-					c_h = pos_c[index] + vel_c[index];	/* actualitza posicio entera */
+					vel_f[in] = -vel_f[in];
+					vel_c[in]= -vel_c[in];	/* canvia sentit velocitats */
+					f_h = pos_f[in] + vel_f[in];
+					c_h = pos_c[in] + vel_c[in];	/* actualitza posicio entera */
 				}
 			}
 			/* mostrar la pilota a la nova posició */
 			if (win_quincar(f_h, c_h) == ' ') {	/* verificar posicio definitiva *//* si no hi ha obstacle */
-				win_escricar(f_pil[index], c_pil[index], ' ', NO_INV);	/* esborra pilota */
-				pos_f[index] += vel_f[index];
-				pos_c[index] += vel_c[index];
-				f_pil[index] = f_h;
-				c_pil[index] = c_h;	/* actualitza posicio actual */
-				if (f_pil[index] != n_fil - 1)	/* si no surt del taulell, */
-					win_escricar(f_pil[index], c_pil[index], '1', INVERS);	/* imprimeix pilota */
+				win_escricar(f_pil[in], c_pil[in], ' ', NO_INV);	/* esborra pilota */
+				pos_f[in] += vel_f[in];
+				pos_c[in] += vel_c[in];
+				f_pil[in] = f_h;
+				c_pil[in] = c_h;	/* actualitza posicio actual */
+				if (f_pil[in] != n_fil - 1)	/* si no surt del taulell, */
+					win_escricar(f_pil[in], c_pil[in], '1', INVERS);	/* imprimeix pilota */
 				else
 					fora = 1;
 			}
 		} else {	/* posicio hipotetica = a la real: moure */
-			pos_f[index] += vel_f[index];
-			pos_c[index] += vel_c[index];
+			pos_f[in] += vel_f[in];
+			pos_c[in] += vel_c[in];
 		}
 		fi2 = (nblocs==0 || fora);
 		win_retard(100);
 	} while(!fi1 || !fi2);
-	return ((void *) index);
+	return ((void *) in);
+}
+
+
+/*Si hi ha una col.lisió pilota-bloci esborra el bloc */
+void comprovar_bloc(int f, int c)
+{
+	int col;
+	char quin = win_quincar(f, c);
+
+	if (quin == BLKCHAR || quin == FRNTCHAR) 
+	{
+		/* TODO: generar nova pilota */
+		if (quin == BLKCHAR)
+		{
+			pthread_create(&tid[id-1],NULL, &mou_pilota , (char *) id);
+			id++;
+		}
+		col = c;
+		while (win_quincar(f, col) != ' ') 
+		{
+			win_escricar(f, col, ' ', NO_INV);
+			col++;
+		}
+		col = c - 1;
+		while (win_quincar(f, col) != ' ') 
+		{
+			win_escricar(f, col, ' ', NO_INV);
+			col--;
+		}
+
+		nblocs--;
+	}
 }
 
 /* funcio per moure la paleta segons la tecla premuda */
