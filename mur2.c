@@ -213,22 +213,13 @@ int inicialitza_joc(void)
 	i_port = n_col / 2 - m_por / 2 - 1;				/* crea el forat de la porteria */
 	f_port = i_port + m_por - 1;
 	for (i = i_port; i <= f_port; i++)
-	{
-		pthread_mutex_lock(&mutex);
 		win_escricar(n_fil - 2, i, ' ', NO_INV);
-		pthread_mutex_unlock(&mutex);
-	}
 
 	n_fil = n_fil - 1;						/* descompta la fila de missatges */
-
 	f_pal = n_fil - 2;						/* posicio inicial de la paleta per defecte */
 	c_pal = (n_col-MIDA_PALETA) / 2;				/* a baix i centrada */
 	for (i = 0; i < MIDA_PALETA; i++)				/* dibuixar paleta inicial */
-	{
-		pthread_mutex_lock(&mutex);
 		win_escricar(f_pal, c_pal + i, '0', INVERS);
-		pthread_mutex_unlock(&mutex);
-	}
 
 	/* generar la pilota */
 	for (i = 1; i <= num_pilotes; i++)
@@ -239,9 +230,7 @@ int inicialitza_joc(void)
 			pos_c[i] = n_col - 1;
 		f_pil[i] = pos_f[i];
 		c_pil[i] = pos_c[i];							/* dibuixar la pilota inicialment */
-		pthread_mutex_lock(&mutex);
 		win_escricar(f_pil[i], c_pil[i], i, INVERS);
-		pthread_mutex_unlock(&mutex);		
 	}
 	/* generar els blocs */
 	nb = 0;
@@ -251,17 +240,11 @@ int inicialitza_joc(void)
 	{
 		for (c = 0; c < BLKSIZE; c++) 
 		{
-			pthread_mutex_lock(&mutex);
 			win_escricar(3, offset + c, FRNTCHAR, INVERS);
-			pthread_mutex_unlock(&mutex);			
 			nb++;
-			pthread_mutex_lock(&mutex);
 			win_escricar(4, offset + c, BLKCHAR, NO_INV);
-			pthread_mutex_unlock(&mutex);			
 			nb++;
-			pthread_mutex_lock(&mutex);
 			win_escricar(5, offset + c, FRNTCHAR, INVERS);
-			pthread_mutex_unlock(&mutex);
 			nb++;
 		}
 		offset += BLKSIZE + BLKGAP;
@@ -273,11 +256,7 @@ int inicialitza_joc(void)
 	for (i = 0; i < nb; i++) 
 	{
 		for (c = 0; c < BLKSIZE + BLKGAP; c++) 
-		{
-			pthread_mutex_lock(&mutex);
-			win_escricar(6, offset + c, WLLCHAR, NO_INV);
-			pthread_mutex_unlock(&mutex);			
-		}
+			win_escricar(6, offset + c, WLLCHAR, NO_INV);	
 		offset += BLKSIZE + 2 * BLKGAP;
 	}
 
