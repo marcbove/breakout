@@ -375,7 +375,6 @@ void comprovar_bloc(int f, int c)
 			win_escricar(f, col, ' ', NO_INV);
 			col--;
 		}
-
 		nblocs--;
 	}
 }
@@ -390,7 +389,7 @@ void * mou_pilota(void * index)
 	int fora = 0;
 	int in = (intptr_t)index;
 	printf("%d", in);
-	do{									/* Bucle pelota1 */
+	do{									/* Bucle pelota */
 		f_h = pos_f[in] + vel_f[in];				/* posicio hipotetica de la pilota (entera) */
 		c_h = pos_c[in] + vel_c[in];
 		rh = rv = rd = ' ';
@@ -441,7 +440,8 @@ void * mou_pilota(void * index)
 				f_pil[in] = f_h;
 				c_pil[in] = c_h;	/* actualitza posicio actual */
 				if (f_pil[in] != n_fil - 1)	/* si no surt del taulell, */
-					win_escricar(f_pil[in], c_pil[in], '1', INVERS);	/* imprimeix pilota */
+					win_escricar(f_pil[in], c_pil[in], 48+in, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+index*/
+	
 				else
 					fora = 1;
 			}
