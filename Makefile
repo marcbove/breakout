@@ -9,7 +9,7 @@ mur1 : mur1.c winsuport.o winsuport.h
 #  amb mutex
 mur2 : mur2.c winsuport.o winsuport.h
 	gcc -Wall -g mur2.c winsuport.o -o mur2 -lcurses -lpthread 
-# el -g de la comanda anterior no el posa en l'enunciat de la practica, preguntar pq
+# el -g de la comanda anterior no el posa en l'enunciat de la practica, preguntar pq (creo que es debug)
 
 
 

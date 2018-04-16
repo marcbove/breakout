@@ -1,6 +1,6 @@
 /*****************************************************************************/
 /*                                                                           */
-/*                           mur1.c                                          */
+/*                           mur2.c                                          */
 /*                                                                           */
 /*  Compilar i executar:                                                     */
 /*     El programa invoca les funcions definides a "winsuport.c", les        */
@@ -10,7 +10,7 @@
 /*     compilat amb la llibreria 'curses':                                   */
 /*                                                                           */
 /*       $ gcc -c winsuport.c -o winsuport.o                                 */
-/*       $ gcc mur1.c winsuport.o -o mur1 -lcurses                           */
+/*       $ gcc mur2.c winsuport.o -o mur2 -lcurses -lpthread         	     */
 /*                                                                           */
 /*  Al tenir una orientació vertical cal tenir un terminal amb prou files.   */
 /*  Per exemple:                                                             */
@@ -98,6 +98,10 @@ char *descripcio[] = {
 
 
 pthread_t tid[MAX_THREADS];	/* tabla de identificadors de threads */
+/* per inicialitzar el mutex es pot posar:
+int pthread_mutex_init(pthread_mutex_t * mutex, const pthread_mutexattr_t * attr)
+o bé es pot fer la següent assignació, que inicialitza el mutex amb els valors per defecte*/
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int id = 1;
 int num_pilotes = 1;
@@ -209,14 +213,22 @@ int inicialitza_joc(void)
 	i_port = n_col / 2 - m_por / 2 - 1;				/* crea el forat de la porteria */
 	f_port = i_port + m_por - 1;
 	for (i = i_port; i <= f_port; i++)
+	{
+		pthread_mutex_lock(&mutex);
 		win_escricar(n_fil - 2, i, ' ', NO_INV);
+		pthread_mutex_unlock(&mutex);
+	}
 
 	n_fil = n_fil - 1;						/* descompta la fila de missatges */
 
 	f_pal = n_fil - 2;						/* posicio inicial de la paleta per defecte */
 	c_pal = (n_col-MIDA_PALETA) / 2;				/* a baix i centrada */
 	for (i = 0; i < MIDA_PALETA; i++)				/* dibuixar paleta inicial */
+	{
+		pthread_mutex_lock(&mutex);
 		win_escricar(f_pal, c_pal + i, '0', INVERS);
+		pthread_mutex_unlock(&mutex);
+	}
 
 	/* generar la pilota */
 	for (i = 1; i <= num_pilotes; i++)
@@ -227,7 +239,9 @@ int inicialitza_joc(void)
 			pos_c[i] = n_col - 1;
 		f_pil[i] = pos_f[i];
 		c_pil[i] = pos_c[i];							/* dibuixar la pilota inicialment */
+		pthread_mutex_lock(&mutex);
 		win_escricar(f_pil[i], c_pil[i], i, INVERS);
+		pthread_mutex_unlock(&mutex);		
 	}
 	/* generar els blocs */
 	nb = 0;
@@ -237,11 +251,17 @@ int inicialitza_joc(void)
 	{
 		for (c = 0; c < BLKSIZE; c++) 
 		{
+			pthread_mutex_lock(&mutex);
 			win_escricar(3, offset + c, FRNTCHAR, INVERS);
+			pthread_mutex_unlock(&mutex);			
 			nb++;
+			pthread_mutex_lock(&mutex);
 			win_escricar(4, offset + c, BLKCHAR, NO_INV);
+			pthread_mutex_unlock(&mutex);			
 			nb++;
+			pthread_mutex_lock(&mutex);
 			win_escricar(5, offset + c, FRNTCHAR, INVERS);
+			pthread_mutex_unlock(&mutex);
 			nb++;
 		}
 		offset += BLKSIZE + BLKGAP;
@@ -254,7 +274,9 @@ int inicialitza_joc(void)
 	{
 		for (c = 0; c < BLKSIZE + BLKGAP; c++) 
 		{
+			pthread_mutex_lock(&mutex);
 			win_escricar(6, offset + c, WLLCHAR, NO_INV);
+			pthread_mutex_unlock(&mutex);			
 		}
 		offset += BLKSIZE + 2 * BLKGAP;
 	}
@@ -366,13 +388,17 @@ void comprovar_bloc(int f, int c)
 		col = c;
 		while (win_quincar(f, col) != ' ') 
 		{
+			pthread_mutex_lock(&mutex);
 			win_escricar(f, col, ' ', NO_INV);
+			pthread_mutex_unlock(&mutex);			
 			col++;
 		}
 		col = c - 1;
 		while (win_quincar(f, col) != ' ') 
 		{
+			pthread_mutex_lock(&mutex);
 			win_escricar(f, col, ' ', NO_INV);
+			pthread_mutex_unlock(&mutex);			
 			col--;
 		}
 		nblocs--;
@@ -433,25 +459,35 @@ void * mou_pilota(void * index)
 				}
 			}
 			/* mostrar la pilota a la nova posició */
-			if (win_quincar(f_h, c_h) == ' ') {	/* verificar posicio definitiva *//* si no hi ha obstacle */
+			if (win_quincar(f_h, c_h) == ' ') 
+			{	/* verificar posicio definitiva *//* si no hi ha obstacle */
+				pthread_mutex_lock(&mutex);
 				win_escricar(f_pil[in], c_pil[in], ' ', NO_INV);	/* esborra pilota */
+				pthread_mutex_unlock(&mutex);
 				pos_f[in] += vel_f[in];
 				pos_c[in] += vel_c[in];
 				f_pil[in] = f_h;
 				c_pil[in] = c_h;	/* actualitza posicio actual */
+				
 				if (f_pil[in] != n_fil - 1)	/* si no surt del taulell, */
+				{
+					pthread_mutex_lock(&mutex);
 					win_escricar(f_pil[in], c_pil[in], 48+in, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+index*/
-	
+					pthread_mutex_unlock(&mutex);					
+				}
 				else
 					fora = 1;
 			}
-		} else {	/* posicio hipotetica = a la real: moure */
+		} 
+		else 
+		{	/* posicio hipotetica = a la real: moure */
 			pos_f[in] += vel_f[in];
 			pos_c[in] += vel_c[in];
 		}
 		fi2 = (nblocs==0 || fora);
 		win_retard(100);
 	} while(!fi1 || !fi2);
+
 	return ((void *) index);
 }
 
@@ -464,18 +500,28 @@ void * mou_paleta(void * nul)
 	int tecla, result;
 	do{												/* Bucle paleta */
 		result = 0;
+		pthread_mutex_lock(&mutex);
 		tecla = win_gettec();
+		pthread_mutex_unlock(&mutex);
 		if (tecla != 0) {
-			if ((tecla == TEC_DRETA)
-				&& ((c_pal + MIDA_PALETA) < n_col - 1)) {
+			if ((tecla == TEC_DRETA) && ((c_pal + MIDA_PALETA) < n_col - 1)) 
+			{
+					pthread_mutex_lock(&mutex);
 					win_escricar(f_pal, c_pal, ' ', NO_INV);			/* esborra primer bloc */
+					pthread_mutex_unlock(&mutex);					
 					c_pal++;							/* actualitza posicio */
+					pthread_mutex_lock(&mutex);
 					win_escricar(f_pal, c_pal + MIDA_PALETA - 1, '0', INVERS);	/*esc. ultim bloc */
+					pthread_mutex_unlock(&mutex);
 			}
 			if ((tecla == TEC_ESQUER) && (c_pal > 1)) {
+					pthread_mutex_lock(&mutex);
 					win_escricar(f_pal, c_pal + MIDA_PALETA - 1, ' ', NO_INV);	/*esborra ultim bloc */
+					pthread_mutex_unlock(&mutex);
 					c_pal--;							/* actualitza posicio */
+					pthread_mutex_lock(&mutex);
 					win_escricar(f_pal, c_pal, '0', INVERS);			/* escriure primer bloc */
+					pthread_mutex_unlock(&mutex);
 			}
 			if (tecla == TEC_RETURN)
 				result = 1;							/* final per pulsacio RETURN */

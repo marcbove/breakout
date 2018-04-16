@@ -10,7 +10,7 @@
 /*     compilat amb la llibreria 'curses':                                   */
 /*                                                                           */
 /*       $ gcc -c winsuport.c -o winsuport.o                                 */
-/*       $ gcc mur1.c winsuport.o -o mur1 -lcurses                           */
+/*       $ gcc mur1.c winsuport.o -o mur1 -lcurses lpthread                  */
 /*                                                                           */
 /*  Al tenir una orientació vertical cal tenir un terminal amb prou files.   */
 /*  Per exemple:                                                             */
