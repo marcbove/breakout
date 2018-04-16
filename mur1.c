@@ -22,6 +22,7 @@
 //#include <stdint.h>		/* intptr_t for 64bits machines */
 
 #include <stdio.h>		/* incloure definicions de funcions estandard */
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include "winsuport.h"		/* incloure definicions de funcions propies */
@@ -119,7 +120,7 @@ char strin[LONGMISS];		/* variable per a generar missatges de text */
 int carrega_configuracio(FILE * fit)
 {
 	int ret = 0;
-	int i = 0;
+	int i = 1;
 	fscanf(fit, "%d %d %d\n", &n_fil, &n_col, &m_por);				/* camp de joc */
 	while(fscanf(fit, "%f %f %f %f\n", &pos_f[i], &pos_c[i], &vel_f[i], &vel_c[i]) == 4)			/* pilota */
 	{
@@ -345,6 +346,40 @@ float control_impacte2(int c_pil, float velc0)
 	return vel_c;
 }
 
+void * mou_pilota(void * index);
+
+/*Si hi ha una col.lisió pilota-bloci esborra el bloc */
+void comprovar_bloc(int f, int c)
+{
+	int col;
+	char quin = win_quincar(f, c);
+
+	if (quin == BLKCHAR || quin == FRNTCHAR) 
+	{
+		/* TODO: generar nova pilota */
+		if (quin == BLKCHAR)
+		{
+			pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
+			id++;
+			num_pilotes++;
+		}
+		col = c;
+		while (win_quincar(f, col) != ' ') 
+		{
+			win_escricar(f, col, ' ', NO_INV);
+			col++;
+		}
+		col = c - 1;
+		while (win_quincar(f, col) != ' ') 
+		{
+			win_escricar(f, col, ' ', NO_INV);
+			col--;
+		}
+
+		nblocs--;
+	}
+}
+
 /* funcio per moure la pilota: El valor que es passa pel paràmetre index serà un enter que indicarà l’ordre de creació de les pilotes (0 -> primera, 1 -> segona, etc.). Aquest paràmetre servirà per accedir
 a   la   taula   global   d’informació   de   les   pilotes,   així   com   per   escriure   el   caràcter
 corresponent   (identificador   ‘1’   per   la   primera,   ‘2’   per   la   segona,   etc.). */
@@ -353,7 +388,7 @@ void * mou_pilota(void * index)
 	int f_h, c_h;
 	char rh, rv, rd;
 	int fora = 0;
-	int in = (int *)index;
+	int in = (intptr_t)index;
 	printf("%d", in);
 	do{									/* Bucle pelota1 */
 		f_h = pos_f[in] + vel_f[in];				/* posicio hipotetica de la pilota (entera) */
@@ -369,9 +404,11 @@ void * mou_pilota(void * index)
 				{	
 					comprovar_bloc(f_h, c_pil[in]);
 					if (rv == '0')				/* col.lisió amb la paleta? */
+					{
 						/* XXX: tria la funció que vulgis o implementa'n una millor */
 						control_impacte();
-	//					vel_c[index] = control_impacte2(c_pil[index], vel_c[index]);
+						vel_c[in] = control_impacte2(c_pil[in], vel_c[in]);
+					}
 					vel_f[in] = -vel_f[in];				/* canvia sentit velocitat vertical */
 					f_h = pos_f[in] + vel_f[in];			/* actualitza posicio hipotetica */
 				}
@@ -415,40 +452,10 @@ void * mou_pilota(void * index)
 		fi2 = (nblocs==0 || fora);
 		win_retard(100);
 	} while(!fi1 || !fi2);
-	return ((void *) in);
+	return ((void *) index);
 }
 
 
-/*Si hi ha una col.lisió pilota-bloci esborra el bloc */
-void comprovar_bloc(int f, int c)
-{
-	int col;
-	char quin = win_quincar(f, c);
-
-	if (quin == BLKCHAR || quin == FRNTCHAR) 
-	{
-		/* TODO: generar nova pilota */
-		if (quin == BLKCHAR)
-		{
-			pthread_create(&tid[id-1],NULL, &mou_pilota , (char *) id);
-			id++;
-		}
-		col = c;
-		while (win_quincar(f, col) != ' ') 
-		{
-			win_escricar(f, col, ' ', NO_INV);
-			col++;
-		}
-		col = c - 1;
-		while (win_quincar(f, col) != ' ') 
-		{
-			win_escricar(f, col, ' ', NO_INV);
-			col--;
-		}
-
-		nblocs--;
-	}
-}
 
 /* funcio per moure la paleta segons la tecla premuda */
 /* retorna un boolea indicant si l'usuari vol acabar */
@@ -521,8 +528,9 @@ int main(int n_args, char *ll_args[])
 	if (inicialitza_joc() != 0)	/* intenta crear el taulell de joc */
 		exit(4);	/* aborta si hi ha algun problema amb taulell */
 	
-	pthread_create(&tid[id],NULL, &mou_pilota , (char *) id);
+	pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
 	id++;
+
 	pthread_create(&tid[0],NULL, &mou_paleta, (void *) NULL);
 
 	clock_t inici_temps = clock();		/* variable tipo tiempo para tiempo inicial */
