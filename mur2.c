@@ -104,7 +104,7 @@ o bé es pot fer la següent assignació, que inicialitza el mutex amb els valor
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 intptr_t id = 1;
-int num_pilotes = 1;
+int num_pilotes = 9;
 int n_fil, n_col;		/* numero de files i columnes del taulell */
 int m_por;			/* mida de la porteria (en caracters) */
 int f_pal, c_pal;		/* posicio del primer caracter de la paleta */
@@ -361,6 +361,10 @@ void comprovar_bloc(int f, int c)
 		/* TODO: generar nova pilota */
 		if (quin == BLKCHAR)
 		{
+			pos_f[id] = f;
+			pos_c[id] = c;
+			vel_f[id] = (float)rand()/(float)(RAND_MAX/2)-1;
+			vel_c[id] = (float)rand()/(float)(RAND_MAX/2)-1;
 			pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
 			id++;
 			num_pilotes++;
