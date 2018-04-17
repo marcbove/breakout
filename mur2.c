@@ -391,7 +391,7 @@ corresponent   (identificador   ‘1’   per   la   primera,   ‘2’   per   
 void * mou_pilota(void * index)
 {
 	int f_h, c_h;
-	char rh, rv, rd;
+	char rh, rv, rd, no;
 	int fora = 0;
 	int in = (intptr_t)index;
 	do{									/* Bucle pelota */
@@ -419,6 +419,7 @@ void * mou_pilota(void * index)
 					f_h = pos_f[in] + vel_f[in];			/* actualitza posicio hipotetica */
 				}
 			}
+
 			if (c_h != c_pil[in]) {	/* provar rebot horitzontal */
 				pthread_mutex_lock(&mutex);
 				rh = win_quincar(f_pil[in], c_h);	/* veure si hi ha algun obstacle */
@@ -431,6 +432,7 @@ void * mou_pilota(void * index)
 					c_h = pos_c[in] + vel_c[in];	/* actualitza posicio hipotetica */
 				}
 			}
+
 			if ((f_h != f_pil[in]) && (c_h != c_pil[in])) {	/* provar rebot diagonal */
 				pthread_mutex_lock(&mutex);
 				rd = win_quincar(f_h, c_h);
@@ -444,13 +446,16 @@ void * mou_pilota(void * index)
 					c_h = pos_c[in] + vel_c[in];	/* actualitza posicio entera */
 				}
 			}
+
 			/* mostrar la pilota a la nova posició */
 			pthread_mutex_lock(&mutex);
-			if (win_quincar(f_h, c_h) == ' ')
+			no = win_quincar(f_h, c_h);
+			pthread_mutex_unlock(&mutex);
+			if (no==' ')
 			{	/* verificar posicio definitiva *//* si no hi ha obstacle */
-				//pthread_mutex_lock(&mutex);
+				pthread_mutex_lock(&mutex);
 				win_escricar(f_pil[in], c_pil[in], ' ', NO_INV);	/* esborra pilota */
-				//pthread_mutex_unlock(&mutex);
+				pthread_mutex_unlock(&mutex);
 				pos_f[in] += vel_f[in];
 				pos_c[in] += vel_c[in];
 				f_pil[in] = f_h;
@@ -458,23 +463,23 @@ void * mou_pilota(void * index)
 
 				if (f_pil[in] != n_fil - 1)	/* si no surt del taulell, */
 				{
-					//pthread_mutex_lock(&mutex);
+					pthread_mutex_lock(&mutex);
 					win_escricar(f_pil[in], c_pil[in], 48+in, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+index*/
-					//pthread_mutex_unlock(&mutex);
+					pthread_mutex_unlock(&mutex);
 				}
 				else
 					fora = 1;
 			}
-			pthread_mutex_unlock(&mutex);
 		}
 		else
 		{	/* posicio hipotetica = a la real: moure */
 			pos_f[in] += vel_f[in];
 			pos_c[in] += vel_c[in];
 		}
-
+		pthread_mutex_lock(&mutex);
 		fi2 = (nblocs==0 || fora);
-		win_retard(100);
+		pthread_mutex_unlock(&mutex);
+		win_retard(retard);
 	} while(!fi1 || !fi2);
 
 	return ((void *) index);
@@ -491,34 +496,36 @@ void * mou_paleta(void * nul)
 		pthread_mutex_lock(&mutex);
 		tecla = win_gettec();
 		pthread_mutex_unlock(&mutex);
+
 		if (tecla != 0) {
 			if ((tecla == TEC_DRETA) && ((c_pal + MIDA_PALETA) < n_col - 1))
 			{
 					pthread_mutex_lock(&mutex);
 					win_escricar(f_pal, c_pal, ' ', NO_INV);			/* esborra primer bloc */
-					pthread_mutex_unlock(&mutex);
+
 					c_pal++;							/* actualitza posicio */
-					pthread_mutex_lock(&mutex);
+
 					win_escricar(f_pal, c_pal + MIDA_PALETA - 1, '0', INVERS);	/*esc. ultim bloc */
 					pthread_mutex_unlock(&mutex);
 			}
 			if ((tecla == TEC_ESQUER) && (c_pal > 1)) {
 					pthread_mutex_lock(&mutex);
 					win_escricar(f_pal, c_pal + MIDA_PALETA - 1, ' ', NO_INV);	/*esborra ultim bloc */
-					pthread_mutex_unlock(&mutex);
 					c_pal--;							/* actualitza posicio */
-					pthread_mutex_lock(&mutex);
+
 					win_escricar(f_pal, c_pal, '0', INVERS);			/* escriure primer bloc */
 					pthread_mutex_unlock(&mutex);
 			}
 			if (tecla == TEC_RETURN)
 				result = 1;							/* final per pulsacio RETURN */
+			pthread_mutex_lock(&mutex);
 			dirPaleta = tecla;							/* per a afectar al moviment de les pilotes*/
+			pthread_mutex_unlock(&mutex);
 		}
 		pthread_mutex_lock(&mutex);
 		fi1 = result;
 		pthread_mutex_unlock(&mutex);
-		win_retard(25);
+		win_retard(5);
 	} while(!fi1 || !fi2);
 
 	return ((void *) 0);
@@ -579,14 +586,17 @@ int main(int n_args, char *ll_args[])
 		segons = ((((float) t_actual - (float) inici_temps)/CLOCKS_PER_SEC)*100)-60 * minuts;
 		if (segons >= 60)
 			minuts ++;
-
+		pthread_mutex_lock(&mutex);
 		memset(tiempo, 0, sizeof tiempo);
 		sprintf(tiempo, "Tiempo: %02d:%02d", minuts, segons);
 		win_escristr(tiempo);
-
+		pthread_mutex_unlock(&mutex);
 		win_retard(retard);		/* retard del joc */
 	} while (!fi1 && !fi2);
-
+	//int i;
+	//for (i=0; i<=numpilotes; i++){
+		//pthread_exit(&tid[i]);
+	//}
 	t_actual = clock();
 	segons = ((((float) t_actual - (float) inici_temps)/CLOCKS_PER_SEC)*100)-60 * minuts;
 	if (segons >= 60)
