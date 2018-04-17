@@ -358,7 +358,6 @@ void comprovar_bloc(int f, int c)
 
 	if (quin == BLKCHAR || quin == FRNTCHAR)
 	{
-		/* TODO: generar nova pilota */
 		if (quin == BLKCHAR)
 		{
 			pos_f[id] = f;
@@ -396,7 +395,6 @@ void * mou_pilota(void * index)
 {
 	int f_h, c_h;
 	char rh, rv, rd, no;
-	int fora = 0;
 	int in = (intptr_t)index;
 	do{									/* Bucle pelota */
 		f_h = pos_f[in] + vel_f[in];				/* posicio hipotetica de la pilota (entera) */
@@ -596,12 +594,9 @@ int main(int n_args, char *ll_args[])
 		sprintf(tiempo, "Tiempo: %02d:%02d", minuts, segons);
 		win_escristr(tiempo);
 		pthread_mutex_unlock(&mutex);
-		win_retard(retard);		/* retard del joc */
+		win_retard(100);		/* retard del joc */
 	} while (!fi1 && !fi2);
-	//int i;
-	//for (i=0; i<=numpilotes; i++){
-		//pthread_exit(&tid[i]);
-	//}
+
 	t_actual = clock();
 	segons = ((((float) t_actual - (float) inici_temps)/CLOCKS_PER_SEC)*100)-60 * minuts;
 	if (segons >= 60)
