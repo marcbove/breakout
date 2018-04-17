@@ -104,7 +104,7 @@ o bé es pot fer la següent assignació, que inicialitza el mutex amb els valor
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 intptr_t id = 1;
-int num_pilotes = 9;
+int num_pilotes = 1;
 int n_fil, n_col;		/* numero de files i columnes del taulell */
 int m_por;			/* mida de la porteria (en caracters) */
 int f_pal, c_pal;		/* posicio del primer caracter de la paleta */
@@ -472,7 +472,7 @@ void * mou_pilota(void * index)
 					pthread_mutex_unlock(&mutex);
 				}
 				else
-					fora = 1;
+					num_pilotes--;
 			}
 		}
 		else
@@ -481,11 +481,12 @@ void * mou_pilota(void * index)
 			pos_c[in] += vel_c[in];
 		}
 		pthread_mutex_lock(&mutex);
-		fi2 = (nblocs==0 || fora);
+		fi2 = (nblocs==0 || num_pilotes==0);
 		pthread_mutex_unlock(&mutex);
 		win_retard(retard);
-	} while(!fi1 || !fi2);
-
+	} while(!fi1 && !fi2);
+	vel_f[in]=0.0;
+	vel_c[in]=0.0;
 	return ((void *) index);
 }
 
@@ -530,7 +531,7 @@ void * mou_paleta(void * nul)
 		fi1 = result;
 		pthread_mutex_unlock(&mutex);
 		win_retard(5);
-	} while(!fi1 || !fi2);
+	} while(!fi1 && !fi2);
 
 	return ((void *) 0);
 }
