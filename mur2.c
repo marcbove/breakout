@@ -168,7 +168,7 @@ int carrega_configuracio(FILE * fit)
 
 	}
 	fclose(fit);
-	num_pilotes = i;
+	num_pilotes = i-1;
 	return(ret);
 }
 
@@ -470,7 +470,11 @@ void * mou_pilota(void * index)
 					pthread_mutex_unlock(&mutex);
 				}
 				else
+				{
+					pthread_mutex_lock(&mutex);
 					num_pilotes--;
+					pthread_mutex_unlock(&mutex);
+				}
 			}
 		}
 		else
