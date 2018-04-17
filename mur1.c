@@ -35,7 +35,7 @@
 #define MAX_FIL	50
 #define MIN_COL	10
 #define MAX_COL	80
-#define MIDA_PALETA (MIN_COL+10)	/* podria ser un paràmetre més */
+#define MIDA_PALETA (MIN_COL-4)	/* podria ser un paràmetre més */
 #define BLKSIZE	3
 #define BLKGAP	2
 #define BLKCHAR 'B'
