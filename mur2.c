@@ -230,9 +230,9 @@ int inicialitza_joc(void)
 			pos_c[i] = n_col - 1;
 		f_pil[i] = pos_f[i];
 		c_pil[i] = pos_c[i];							/* dibuixar la pilota inicialment */
-		/*win_escricar(f_pil[i], c_pil[i], i, INVERS);*/
+		win_escricar(f_pil[i], c_pil[i], 48+i, INVERS);
 	}
-	win_escricar(f_pil[1], c_pil[1], '1', INVERS);
+
 	/* generar els blocs */
 	nb = 0;
 	nblocs = n_col / (BLKSIZE + BLKGAP) - 1;
@@ -366,7 +366,9 @@ void comprovar_bloc(int f, int c)
 			vel_c[id] = (float)rand()/(float)(RAND_MAX/2)-1;
 			pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
 			id++;
+			pthread_mutex_lock(&mutex);
 			num_pilotes++;
+			pthread_mutex_unlock(&mutex);
 		}
 		col = c;
 		while (win_quincar(f, col) != ' ')
@@ -604,7 +606,10 @@ int main(int n_args, char *ll_args[])
 	t_actual = clock();
 	segons = ((((float) t_actual - (float) inici_temps)/CLOCKS_PER_SEC)*100)-60 * minuts;
 	if (segons >= 60)
-		minuts ++;
+	{
+		segons = 0;
+		minuts++;
+	}	
 	memset(tiempo, 0, sizeof tiempo);
 
 
