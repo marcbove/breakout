@@ -358,18 +358,6 @@ void comprovar_bloc(int f, int c)
 
 	if (quin == BLKCHAR || quin == FRNTCHAR)
 	{
-		if (quin == BLKCHAR)
-		{
-			pos_f[id] = f;
-			pos_c[id] = c;
-			vel_f[id] = (float)rand()/(float)(RAND_MAX/2)-1;
-			vel_c[id] = (float)rand()/(float)(RAND_MAX/2)-1;
-			pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
-			id++;
-			pthread_mutex_lock(&mutex);
-			num_pilotes++;
-			pthread_mutex_unlock(&mutex);
-		}
 		col = c;
 		while (win_quincar(f, col) != ' ')
 		{
@@ -387,6 +375,19 @@ void comprovar_bloc(int f, int c)
 			col--;
 		}
 		nblocs--;
+
+		if (quin == BLKCHAR)
+		{
+			pthread_mutex_lock(&mutex);
+			pos_f[id] = f;
+			pos_c[id] = c;
+			vel_f[id] = (float)rand()/(float)(RAND_MAX/2)-1;
+			vel_c[id] = (float)rand()/(float)(RAND_MAX/2)-1;
+			pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
+			id++;
+			num_pilotes++;
+			pthread_mutex_unlock(&mutex);
+		}
 	}
 }
 
@@ -396,6 +397,7 @@ corresponent   (identificador   ‘1’   per   la   primera,   ‘2’   per   
 void * mou_pilota(void * index)
 {
 	int f_h, c_h;
+	int fi3 = 0;
 	char rh, rv, rd, no;
 	int in = (intptr_t)index;
 	do{									/* Bucle pelota */
@@ -464,18 +466,19 @@ void * mou_pilota(void * index)
 				pos_c[in] += vel_c[in];
 				f_pil[in] = f_h;
 				c_pil[in] = c_h;	/* actualitza posicio actual */
-
+				pthread_mutex_lock(&mutex);
 				if (f_pil[in] != n_fil - 1)	/* si no surt del taulell, */
 				{
-					pthread_mutex_lock(&mutex);
+					//pthread_mutex_lock(&mutex);
 					win_escricar(f_pil[in], c_pil[in], 48+in, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+index*/
 					pthread_mutex_unlock(&mutex);
 				}
 				else
 				{
-					pthread_mutex_lock(&mutex);
+					//pthread_mutex_lock(&mutex);
 					num_pilotes--;
 					pthread_mutex_unlock(&mutex);
+					fi3 = 1;
 				}
 			}
 		}
@@ -488,7 +491,8 @@ void * mou_pilota(void * index)
 		fi2 = (nblocs==0 || num_pilotes==0);
 		pthread_mutex_unlock(&mutex);
 		win_retard(retard);
-	} while(!fi1 && !fi2);
+
+	} while(!fi1 && !fi2 && !fi3);
 	vel_f[in]=0.0;
 	vel_c[in]=0.0;
 	return ((void *) index);
@@ -596,9 +600,9 @@ int main(int n_args, char *ll_args[])
 		if (segons >= 60)
 			minuts ++;
 		pthread_mutex_lock(&mutex);
-		memset(tiempo, 0, sizeof tiempo);
+		/*memset(tiempo, 0, sizeof tiempo);
 		sprintf(tiempo, "Tiempo: %02d:%02d", minuts, segons);
-		win_escristr(tiempo);
+		win_escristr(tiempo);*/
 		pthread_mutex_unlock(&mutex);
 		win_retard(100);		/* retard del joc */
 	} while (!fi1 && !fi2);
