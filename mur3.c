@@ -46,6 +46,7 @@
 #define FRNTCHAR 'A'
 #define LONGMISS 65
 			/* variables globals */
+
 char *descripcio[] = {
 	"\n",
 	"Aquest programa implementa una versio basica del joc Arkanoid o Breakout:\n",
