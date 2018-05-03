@@ -378,12 +378,15 @@ void comprovar_bloc(int f, int c)
 
 		if (quin == BLKCHAR)
 		{
-			pthread_mutex_lock(&mutex);
+			
 			pos_f[id] = f;
 			pos_c[id] = c;
+			f_pil[id] = f;
+			c_pil[id] = c;
 			vel_f[id] = (float)rand()/(float)(RAND_MAX/2)-1;
 			vel_c[id] = (float)rand()/(float)(RAND_MAX/2)-1;
 			pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
+			pthread_mutex_lock(&mutex);
 			id++;
 			num_pilotes++;
 			pthread_mutex_unlock(&mutex);
@@ -418,7 +421,9 @@ void * mou_pilota(void * index)
 					if (rv == '0')				/* col.lisió amb la paleta? */
 					{
 						/* XXX: tria la funció que vulgis o implementa'n una millor */
+						pthread_mutex_lock(&mutex);
 						control_impacte();
+						pthread_mutex_unlock(&mutex);
 						vel_c[in] = control_impacte2(c_pil[in], vel_c[in]);
 					}
 					vel_f[in] = -vel_f[in];				/* canvia sentit velocitat vertical */
@@ -460,7 +465,11 @@ void * mou_pilota(void * index)
 			if (no==' ')
 			{	/* verificar posicio definitiva *//* si no hi ha obstacle */
 				pthread_mutex_lock(&mutex);
-				win_escricar(f_pil[in], c_pil[in], ' ', NO_INV);	/* esborra pilota */
+				if (f_pil[in] == 0 && c_pil[in]==0){
+					win_escricar(f_pil[in], c_pil[in], 48+in, NO_INV);	/* esborra pilota */
+				}
+				else
+					win_escricar(f_pil[in], c_pil[in], ' ', NO_INV);	/* esborra pilota */
 				pthread_mutex_unlock(&mutex);
 				pos_f[in] += vel_f[in];
 				pos_c[in] += vel_c[in];

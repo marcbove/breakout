@@ -376,6 +376,8 @@ void comprovar_bloc(int f, int c)
 			
 			pos_f[id] = f;
 			pos_c[id] = c;
+			f_pil[id] = f;
+			c_pil[id] = c;
 			vel_f[id] = (float)rand()/(float)(RAND_MAX/2)-1;
 			vel_c[id] = (float)rand()/(float)(RAND_MAX/2)-1;
 			pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
