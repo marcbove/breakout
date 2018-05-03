@@ -325,7 +325,9 @@ void control_impacte(void)
 				}
 			}
 		}
+		pthread_mutex_lock(&mutex);
 		dirPaleta=0;							/* reset perque ja hem aplicat l'efecte */
+		pthread_mutex_unlock(&mutex);
 	}
 }
 
@@ -421,9 +423,7 @@ void * mou_pilota(void * index)
 					if (rv == '0')				/* col.lisió amb la paleta? */
 					{
 						/* XXX: tria la funció que vulgis o implementa'n una millor */
-						pthread_mutex_lock(&mutex);
 						control_impacte();
-						pthread_mutex_unlock(&mutex);
 						vel_c[in] = control_impacte2(c_pil[in], vel_c[in]);
 					}
 					vel_f[in] = -vel_f[in];				/* canvia sentit velocitat vertical */
