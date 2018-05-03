@@ -25,7 +25,9 @@
 #define LONGMISS 65
 
 /* variables globals */
+/*						*/
 
+void * mou_pilota(void * index);
 /*Si hi ha una col.lisió pilota-bloci esborra el bloc */
 void comprovar_bloc(int f, int c)
 {
@@ -150,17 +152,8 @@ int main(int n_args, char *ll_args[])
     int f_pil = atoi(ll_args[9]);
     int c_pil = atoi(ll_args[10]);	
 	
-	int rebotes = atoi (ll_args[11]);
-	int *num_rebots = map_mem(rebotes);		/* obtenir adres. de mem. compartida */
-
-	int fin2 = atoi (ll_args[12]);
-	int *fi2 = map_mem(fin2);
-
-	int id_win = atoi (ll_args[13]);
-	void *p_win;
-	p_win = map_mem (id_win);
-
-	win_set(p_win,n_fil,n_col);	/* crea acces a finestra oberta pel proces pare */
+    int * addr_tauler = map_mem(id_mem_tauler);
+    win_set(addr_tauler, n_fil, n_col);
 	
 	int f_h, c_h;
 	int fi3 = 0;

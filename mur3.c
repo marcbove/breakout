@@ -180,6 +180,8 @@ int carrega_configuracio(FILE * fit)
 	return(ret);
 }
 
+void * mou_pilota(void * index);
+
 /* funcio per inicialitar les variables i visualitzar l'estat inicial del joc */
 /* retorna diferent de zero si hi ha algun problema */
 int inicialitza_joc(void)
@@ -329,7 +331,7 @@ void comprovar_bloc(int f, int c)
 		{
 			//pthread_mutex_lock(&mutex);
 			id++;
-			pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
+			//pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
 			pos_f[id] = f;
 			pos_c[id] = c;
 			vel_f[id] = (float)rand()/(float)(RAND_MAX/2)-1;
