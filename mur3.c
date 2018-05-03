@@ -297,6 +297,112 @@ void mostra_final(char *miss)
 	getchar();
 }
 
+/*Si hi ha una col.lisió pilota-bloci esborra el bloc */
+void comprovar_bloc(int f, int c)
+{
+	int col;
+	//pthread_mutex_lock(&mutex);
+	char quin = win_quincar(f, c);
+	//pthread_mutex_unlock(&mutex);
+
+	if (quin == BLKCHAR || quin == FRNTCHAR)
+	{
+		col = c;
+		while (win_quincar(f, col) != ' ')
+		{
+			//pthread_mutex_lock(&mutex);
+			win_escricar(f, col, ' ', NO_INV);
+			//pthread_mutex_unlock(&mutex);
+			col++;
+		}
+		col = c - 1;
+		while (win_quincar(f, col) != ' ')
+		{
+			//pthread_mutex_lock(&mutex);
+			win_escricar(f, col, ' ', NO_INV);
+			//pthread_mutex_unlock(&mutex);
+			col--;
+		}
+		nblocs--;
+
+		if (quin == BLKCHAR)
+		{
+			//pthread_mutex_lock(&mutex);
+			id++;
+			pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
+			pos_f[id] = f;
+			pos_c[id] = c;
+			vel_f[id] = (float)rand()/(float)(RAND_MAX/2)-1;
+			vel_c[id] = (float)rand()/(float)(RAND_MAX/2)-1;
+			num_pilotes++;
+			//pthread_mutex_unlock(&mutex);
+		}
+	}
+}
+
+/* funcio per a calcular rudimentariament els efectes amb la pala */
+/* no te en compta si el moviment de la paleta no és recent */
+/* cal tenir en compta que després es calcula el rebot */
+void control_impacte(void)
+{
+	int i;
+	for(i = 1; i <= num_pilotes; i++)
+	{
+		if (dirPaleta == TEC_DRETA)
+		{
+			if (vel_c[i] <= 0.0)					/* pilota cap a l'esquerra */
+				vel_c[i] = -vel_c[i] - 0.2;				/* xoc: canvi de sentit i reduir velocitat */
+			else
+			{							/* a favor: incrementar velocitat */
+				if (vel_c[i] <= 0.8)
+					vel_c[i] += 0.2;
+			}
+		}
+		else
+		{
+			if (dirPaleta == TEC_ESQUER)
+			{
+				if (vel_c[i] >= 0.0)				/* pilota cap a la dreta */
+					vel_c[i] = -vel_c[i] + 0.2;			/* xoc: canvi de sentit i reduir la velocitat */
+				else
+				{						/* a favor: incrementar velocitat */
+					if (vel_c[i] >= -0.8)
+						vel_c[i] -= 0.2;
+				}
+			}
+			else
+			{							/* XXX trucs no documentats */
+				if (dirPaleta == TEC_AMUNT)
+					vel_c[i] = 0.0;				/* vertical */
+				else
+				{
+					if (dirPaleta == TEC_AVALL)
+						if (vel_f[i] <= 1.0)
+							vel_f[i] -= 0.2;		/* frenar */
+				}
+			}
+		}
+		dirPaleta=0;							/* reset perque ja hem aplicat l'efecte */
+	}
+}
+
+float control_impacte2(int c_pil, float velc0)
+{
+	int distApal;
+	float vel_c;
+
+	distApal = c_pil - c_pal;
+	if (distApal >= 2*MIDA_PALETA/3)				/* costat dreta */
+		vel_c = 0.5;
+	else if (distApal <= MIDA_PALETA/3)				/* costat esquerra */
+		vel_c = -0.5;
+	else if (distApal == MIDA_PALETA/2)				/* al centre */
+		vel_c = 0.0;
+	else 								/*: rebot normal */
+		vel_c = velc0;
+	return vel_c;
+}
+
 /* funcio per moure la paleta segons la tecla premuda */
 /* retorna un boolea indicant si l'usuari vol acabar */
 void * mou_paleta(void * nul)
@@ -394,18 +500,18 @@ int main(int n_args, char *ll_args[])
 	tpid[id] = fork();
 	if (tpid[id] == 0)   /* Es tracta del proces fill */
     {
-  		sprintf (id_str, "%i", 1);  
+  		sprintf (id_str, "%d", 1);  
         sprintf (id_mem_tauler_str, "%d", id_mem_tauler);
-        sprintf (fil_str, "%i", n_fil);
-        sprintf (col_str, "%i", n_col);
+        sprintf (fil_str, "%d", n_fil);
+        sprintf (col_str, "%d", n_col);
         sprintf (vel_f_str, "%f", vel_f[id]);
         sprintf (vel_c_str, "%f", vel_c[id]);
         sprintf (pos_f_str, "%f", pos_f[id]);
         sprintf (pos_c_str, "%f", pos_c[id]);
-        sprintf (f_pil_str, "%i", f_pil[id]);
-        sprintf (c_pil_str, "%i", c_pil[id]);
+        sprintf (f_pil_str, "%d", f_pil[id]);
+        sprintf (c_pil_str, "%d", c_pil[id]);
 		execlp("./pilota3", "pilota3", id_str, id_mem_tauler_str, fil_str, 
-			col_str, vel_f_str, vel_c_str,pos_f_str, pos_c_str, f_pil_str, 
+			col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str, 
 			c_pil_str, (char *)0);
         fprintf(stderr, "Error: No puc executar el proces fill \'pilota3\' \n");
         exit(1);  /* Retornem error */
@@ -439,14 +545,14 @@ int main(int n_args, char *ll_args[])
 
 	} while (!fi1 && !fi2);
 
-	t_actual = clock();
+	/*t_actual = clock();
 	segons = ((((float) t_actual - (float) inici_temps)/CLOCKS_PER_SEC)*100)-60 * minuts;
 	if (segons >= 60)
 	{
 		segons = 0;
 		minuts++;
 	}	
-	memset(tiempo, 0, sizeof tiempo);
+	memset(tiempo, 0, sizeof tiempo);*/
 
 	if (nblocs == 0)
 	{

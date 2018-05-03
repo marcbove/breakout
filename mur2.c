@@ -614,14 +614,14 @@ int main(int n_args, char *ll_args[])
 		win_retard(100);		/* retard del joc */
 	} while (!fi1 && !fi2);
 
-	t_actual = clock();
-	segons = ((((float) t_actual - (float) inici_temps)/CLOCKS_PER_SEC)*100)-60 * minuts;
-	if (segons >= 60)
-	{
-		segons = 0;
-		minuts++;
-	}	
-	memset(tiempo, 0, sizeof tiempo);
+	//t_actual = clock();
+	//segons = ((((float) t_actual - (float) inici_temps)/CLOCKS_PER_SEC)*100)-60 * minuts;
+	//if (segons >= 60)
+	//{
+	///	segons = 0;
+	//	minuts++;
+	//}	
+	//memset(tiempo, 0, sizeof tiempo);
 
 
 	if (nblocs == 0)
