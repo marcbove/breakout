@@ -382,7 +382,35 @@ int main(int n_args, char *ll_args[])
 	if (inicialitza_joc() != 0)	/* intenta crear el taulell de joc */
 		exit(4);	/* aborta si hi ha algun problema amb taulell */
 
+	char id_str[SIZE_ARRAY], fil_str[SIZE_ARRAY], col_str[SIZE_ARRAY];
+	char id_mem_tauler_str[SIZE_ARRAY], vel_f_str[SIZE_ARRAY], vel_c_str[SIZE_ARRAY];
+	char f_pil_str[SIZE_ARRAY], c_pil_str[SIZE_ARRAY]
+	char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY];
+
 	//pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
+	tpid[id] = fork();
+	if (tpid[id] == 0)   /* Es tracta del proces fill */
+    {
+  		sprintf (id_str, "%i", 1);  
+        sprintf (id_mem_tauler_str, "%f", id_mem_tauler);
+        sprintf (fil_str, "%i", n_fil[id]);
+        sprintf (col_str, "%i", n_col[id]);
+        sprintf (vel_f_str, "%f", vel_f[id]);
+        sprintf (vel_c_str, "%f", vel_c[id]);
+        sprintf (pos_f_str, "%f", pos_f[id]);
+        sprintf (pos_c_str, "%f", pos_c[id]);
+        sprintf (f_pil_str, "%i", f_pil[id]);
+        sprintf (c_pil_str, "%i", c_pil[id]);
+		execlp("./pilota3", "pilota3", id_str, id_mem_tauler_str, fil_str, 
+			col_str, vel_f_str, vel_c_str,pos_f_str, pos_c_str, f_pil_str, 
+			c_pil_str, (char *)0);
+        fprintf(stderr, "Error: No puc executar el proces fill \'pilota3\' \n");
+        exit(1);  /* Retornem error */
+	}
+    else if (tpid[1] <  0 )     /* ERROR*/
+    {
+    	fprintf(stderr, "Hi ha hagut un error en la creacio del proces");
+    }
 
 	pthread_create(&tid[0],NULL, &mou_paleta, (void *) NULL);
 
