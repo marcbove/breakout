@@ -600,9 +600,9 @@ int main(int n_args, char *ll_args[])
 		if (segons >= 60)
 			minuts ++;
 		pthread_mutex_lock(&mutex);
-		/*memset(tiempo, 0, sizeof tiempo);
+		memset(tiempo, 0, sizeof tiempo);
 		sprintf(tiempo, "Tiempo: %02d:%02d", minuts, segons);
-		win_escristr(tiempo);*/
+		win_escristr(tiempo);
 		pthread_mutex_unlock(&mutex);
 		win_retard(100);		/* retard del joc */
 	} while (!fi1 && !fi2);
