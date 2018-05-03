@@ -24,16 +24,18 @@
 #include <stdint.h>		/* intptr_t for 64bits machines */
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>		/* incloure threads */
+#include <unistd.h>	/* fork */	
 #include "winsuport2.h"		/* incloure definicions de funcions propies */
-#include <pthread.h>		/* incloure threads */	
 #include "memoria.h"
 #include "semafor.h"
 #include "missatge.h"
 
 
 /* definicio de constants */
+#define SIZE_ARRAY 32
 #define MAX_THREADS	10
-#define MAXBALLS	(MAX_THREADS-1)
+#define MAXBALLS (MAX_THREADS-1)
 #define MIN_FIL	10		/* dimensions del camp. Depenen del terminal ! */
 #define MAX_FIL	50
 #define MIN_COL	10
@@ -122,6 +124,7 @@ int dirPaleta = 0;
 int retard;			/* valor del retard de moviment, en mil.lisegons */
 int fi1, fi2;			/* valor de condicions finals */
 char strin[LONGMISS];		/* variable per a generar missatges de text */
+int id_mem_tauler;
 
 /* funcio per carregar i interpretar el fitxer de configuracio de la partida */
 /* el parametre ha de ser un punter a fitxer de text, posicionat al principi */
@@ -184,7 +187,7 @@ int inicialitza_joc(void)
 	int i, retwin;
 	int i_port, f_port;					/* inici i final de porteria */
 	int c, nb, offset;
-	int id_mem_tauler;					/* identificador de la zona de memoria on esta el taulell */
+	//int id_mem_tauler;					/* identificador de la zona de memoria on esta el taulell */
 	int * addr_tauler; 					/* @taulell de joc compartit */
 
 	retwin = win_ini(&n_fil, &n_col, '+', INVERS);			/* intenta crear taulell */
@@ -384,7 +387,7 @@ int main(int n_args, char *ll_args[])
 
 	char id_str[SIZE_ARRAY], fil_str[SIZE_ARRAY], col_str[SIZE_ARRAY];
 	char id_mem_tauler_str[SIZE_ARRAY], vel_f_str[SIZE_ARRAY], vel_c_str[SIZE_ARRAY];
-	char f_pil_str[SIZE_ARRAY], c_pil_str[SIZE_ARRAY]
+	char f_pil_str[SIZE_ARRAY], c_pil_str[SIZE_ARRAY];
 	char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY];
 
 	//pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
@@ -392,9 +395,9 @@ int main(int n_args, char *ll_args[])
 	if (tpid[id] == 0)   /* Es tracta del proces fill */
     {
   		sprintf (id_str, "%i", 1);  
-        sprintf (id_mem_tauler_str, "%f", id_mem_tauler);
-        sprintf (fil_str, "%i", n_fil[id]);
-        sprintf (col_str, "%i", n_col[id]);
+        sprintf (id_mem_tauler_str, "%d", id_mem_tauler);
+        sprintf (fil_str, "%i", n_fil);
+        sprintf (col_str, "%i", n_col);
         sprintf (vel_f_str, "%f", vel_f[id]);
         sprintf (vel_c_str, "%f", vel_c[id]);
         sprintf (pos_f_str, "%f", pos_f[id]);
