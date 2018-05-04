@@ -497,6 +497,7 @@ int main(int n_args, char *ll_args[])
 	char id_mem_tauler_str[SIZE_ARRAY], vel_f_str[SIZE_ARRAY], vel_c_str[SIZE_ARRAY];
 	char f_pil_str[SIZE_ARRAY], c_pil_str[SIZE_ARRAY];
 	char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY];
+	char nblocs_str[SIZE_ARRAY], npils_str[SIZE_ARRAY], retard_str[SIZE_ARRAY];
 
 	//pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
 	tpid[id] = fork();
@@ -512,9 +513,12 @@ int main(int n_args, char *ll_args[])
         sprintf (pos_c_str, "%f", pos_c[id]);
         sprintf (f_pil_str, "%d", f_pil[id]);
         sprintf (c_pil_str, "%d", c_pil[id]);
+        sprintf (nblocs_str, "%d", nblocs);
+        sprintf (npils_str, "%d", num_pilotes);
+        sprintf (retard_str, "%d", retard);
 		execlp("./pilota3", "pilota3", id_str, id_mem_tauler_str, fil_str, 
 			col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str, 
-			c_pil_str, (char *)0);
+			c_pil_str, nblocs_str, npils_str, retard_str, (char *)0);
         fprintf(stderr, "Error: No puc executar el proces fill \'pilota3\' \n");
         exit(1);  /* Retornem error */
 	}
