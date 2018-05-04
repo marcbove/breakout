@@ -134,12 +134,14 @@ float control_impacte2(int c_pil, float velc0)
 	return vel_c;
 }
 
+/* La funcio retornarà 1 si la pilota surt de la porteria, 0 altrament */
 /* funcio per moure la pilota: El valor que es passa pel paràmetre index serà un enter que indicarà l’ordre de creació de les pilotes (0 -> primera, 1 -> segona, etc.). Aquest paràmetre servirà per accedir
 a   la   taula   global   d’informació   de   les   pilotes,   així   com   per   escriure   el   caràcter
 corresponent   (identificador   ‘1’   per   la   primera,   ‘2’   per   la   segona,   etc.). */
 int main(int n_args, char *ll_args[])
 //void * mou_pilota(void * index)
 {
+	int fi2 = 0, fi3 = 0;
 	/* Parsing arguments */
 	int index = (intptr_t)atoi(ll_args[1]);
 	int id_mem_tauler = atoi(ll_args[2]);
@@ -156,7 +158,6 @@ int main(int n_args, char *ll_args[])
     win_set(addr_tauler, n_fil, n_col);
 	
 	int f_h, c_h;
-	int fi3 = 0;
 	char rh, rv, rd, no;
 	//int in = (intptr_t)index;
 	do									/* Bucle pelota */
@@ -227,7 +228,7 @@ int main(int n_args, char *ll_args[])
 			//pthread_mutex_lock(&mutex);
 			no = win_quincar(f_h, c_h);
 			//pthread_mutex_unlock(&mutex);
-			if (no==' ')
+			if (no == ' ')
 			{	/* verificar posicio definitiva *//* si no hi ha obstacle */
 				//pthread_mutex_lock(&mutex);
 				win_escricar(f_pil, c_pil, ' ', INVERS);	/* esborra pilota */
@@ -263,10 +264,10 @@ int main(int n_args, char *ll_args[])
 		//pthread_mutex_unlock(&mutex);
 		win_retard(retard);
 
-	} while(!fi1 && !fi2 && !fi3);
+	} while(!fi2 && !fi3); /* fer bucle fins que la pilota surti de la porteria i llavors acabar el proces????? */
 
 	vel_f = 0.0;
 	vel_c = 0.0;
 	
-	return ((void *) index);
+	return (fi3);
 }
