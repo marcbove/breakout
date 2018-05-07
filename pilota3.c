@@ -3,13 +3,16 @@
 #include <stdint.h>		/* intptr_t for 64bits machines */
 #include <stdlib.h>
 #include <string.h>
-#include "winsuport2.h"		/* incloure definicions de funcions propies */
 #include <pthread.h>		/* incloure threads */
+#include <unistd.h>	/* fork */
+#include "winsuport2.h"		/* incloure definicions de funcions propies */
 #include "memoria.h"
 #include "semafor.h"
 #include "missatge.h"
+#include <sys/wait.h>
 
 /* definicio de constants */
+#define SIZE_ARRAY 32
 #define MAX_THREADS	10
 #define MAXBALLS	(MAX_THREADS-1)
 #define MIN_FIL	10		/* dimensions del camp. Depenen del terminal ! */
@@ -26,7 +29,9 @@
 
 /* variables globals */
 pid_t tpid[MAXBALLS];
-
+int *c_pal, *f_pal, *nblocs, *num_pilotes, *dirPaleta, retard, ind, c_pil, f_pil, num_fills;
+int id_mem_tauler, n_fil, n_col;
+float vel_f, vel_c, pos_f, pos_c;
 
 
 /*Si hi ha una col.lisió pilota-bloci esborra el bloc */
@@ -60,12 +65,11 @@ void comprovar_bloc(int f, int c)
 		if (quin == BLKCHAR)
 		{
 			//pthread_mutex_lock(&mutex);
-			/*pos_f = f;
-			pos_c = c;
-			f_pil = f;
-			c_pid = c;
-			vel_f= (float)rand()/(float)(RAND_MAX/2)-1;
-			vel_c = (float)rand()/(float)(RAND_MAX/2)-1;*/
+			char id_str[SIZE_ARRAY], fil_str[SIZE_ARRAY], col_str[SIZE_ARRAY];
+			char id_mem_tauler_str[SIZE_ARRAY], vel_f_str[SIZE_ARRAY], vel_c_str[SIZE_ARRAY];
+			char f_pil_str[SIZE_ARRAY], c_pil_str[SIZE_ARRAY];
+			char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY];
+			char nblocs_str[SIZE_ARRAY], npils_str[SIZE_ARRAY], retard_str[SIZE_ARRAY];
 			tpid[num_fills] = fork();
 			//pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
 			if (tpid[num_fills] == 0)   /* Es tracta del proces fill */
@@ -76,12 +80,12 @@ void comprovar_bloc(int f, int c)
 		      sprintf (col_str, "%d", n_col);
 		      sprintf (vel_f_str, "%f", (float)rand()/(float)(RAND_MAX/2)-1);
 		      sprintf (vel_c_str, "%f", (float)rand()/(float)(RAND_MAX/2)-1);
-		      sprintf (pos_f_str, "%f", f);
-		      sprintf (pos_c_str, "%f", c);
+		      sprintf (pos_f_str, "%f", (float)f);
+		      sprintf (pos_c_str, "%f", (float)c);
 		      sprintf (f_pil_str, "%d", f);
 		      sprintf (c_pil_str, "%d", c);
-		      sprintf (nblocs_str, "%d", nblocs);
-		      sprintf (npils_str, "%d", num_pilotes);
+		      sprintf (nblocs_str, "%ls", nblocs);
+		      sprintf (npils_str, "%ls", num_pilotes);
 		      sprintf (retard_str, "%d", retard);
 					execlp("./pilota3", "pilota3", id_str, id_mem_tauler_str, fil_str,
 					col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
@@ -94,7 +98,8 @@ void comprovar_bloc(int f, int c)
 		    	fprintf(stderr, "Hi ha hagut un error en la creacio del proces");
 		  }
 
-			*num_pilotes++;
+			
+			(*num_pilotes)++;
 			num_fills++;
 			//pthread_mutex_unlock(&mutex);
 		}
@@ -167,35 +172,35 @@ float control_impacte2(int c_pil, float velc0)
 
 
 /* La funcio retornarà 1 si la pilota surt de la porteria, 0 altrament */
-/* funcio per moure la pilota: El valor que es passa pel paràmetre index serà un enter que indicarà l’ordre de creació de les pilotes (0 -> primera, 1 -> segona, etc.). Aquest paràmetre servirà per accedir
+/* funcio per moure la pilota: El valor que es passa pel paràmetre ind serà un enter que indicarà l’ordre de creació de les pilotes (0 -> primera, 1 -> segona, etc.). Aquest paràmetre servirà per accedir
 a   la   taula   global   d’informació   de   les   pilotes,   així   com   per   escriure   el   caràcter
 corresponent   (identificador   ‘1’   per   la   primera,   ‘2’   per   la   segona,   etc.). */
 int main(int n_args, char *ll_args[])
-//void * mou_pilota(void * index)
+//void * mou_pilota(void * ind)
 {
 	int fi2 = 0, fi3 = 0;
 	/* Parsing arguments */
-	int index = (intptr_t)atoi(ll_args[1]);
-	int id_mem_tauler = atoi(ll_args[2]);
-	int n_fil = atoi(ll_args[3]);
-    int n_col = atoi(ll_args[4]);
-    float vel_f = atof(ll_args[5]);
-    float vel_c = atof(ll_args[6]);
-    float pos_f = atof(ll_args[7]);
-    float pos_c = atof(ll_args[8]);
-    int f_pil = atoi(ll_args[9]);
-    int c_pil = atoi(ll_args[10]);
-    int nblocs = atoi(ll_args[11]);
-    int num_pilotes = atoi(ll_args[12]);
-    int retard = atoi(ll_args[12]);
+	ind = (intptr_t)atoi(ll_args[1]);
+	id_mem_tauler = atoi(ll_args[2]);
+	n_fil = atoi(ll_args[3]);
+    n_col = atoi(ll_args[4]);
+    vel_f = atof(ll_args[5]);
+    vel_c = atof(ll_args[6]);
+    pos_f = atof(ll_args[7]);
+    pos_c = atof(ll_args[8]);
+    f_pil = atoi(ll_args[9]);
+    c_pil = atoi(ll_args[10]);
+    * nblocs = atoi(ll_args[11]);
+    * num_pilotes =  atoi(ll_args[12]);
+    retard = atoi(ll_args[12]);
 
 
     int * addr_tauler = map_mem(id_mem_tauler);
     win_set(addr_tauler, n_fil, n_col);
 
-	int f_h, c_h, num_fills = 0;
+	int f_h, c_h;
 	char rh, rv, rd, no;
-	//int in = (intptr_t)index;
+	//int in = (intptr_t)ind;
 
 	do									/* Bucle pelota */
 	{
@@ -278,13 +283,13 @@ int main(int n_args, char *ll_args[])
 				if (f_pil != n_fil - 1)	/* si no surt del taulell, */
 				{
 					//pthread_mutex_lock(&mutex);
-					win_escricar(f_pil, c_pil, 49+index, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+index*/
+					win_escricar(f_pil, c_pil, 49+ind, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+ind*/
 					//pthread_mutex_unlock(&mutex);
 				}
 				else
 				{
 					//pthread_mutex_lock(&mutex);
-					*num_pilotes--;
+					(*num_pilotes)--;
 					//pthread_mutex_unlock(&mutex);
 					fi3 = 1;
 				}
@@ -297,15 +302,15 @@ int main(int n_args, char *ll_args[])
 			pos_c += vel_c;
 		}
 		//pthread_mutex_lock(&mutex);
-		fi2 = (*nblocs == 0 || *num_pilotes == 0);
+		fi2 = ((*nblocs) == 0 || (*num_pilotes) == 0);
 		//pthread_mutex_unlock(&mutex);
 		win_retard(retard);
 
 	} while(!fi3 && !fi2); /* fer bucle fins que la pilota surti de la porteria i llavors acabar el proces????? */
 	int i;
 	int stat;
-	for (i=0; i< index; i++){
-		waitpid(tpid[i], &stat, NULL);
+	for (i=0; i< ind; i++){
+		waitpid(tpid[i], &stat, 0);
 	}
 
 	return (fi3);

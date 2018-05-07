@@ -15,7 +15,7 @@ mur3 : mur3.c winsuport2.o memoria.o
 	gcc -Wall -g mur3.c winsuport2.o memoria.o -o mur3 -lcurses -lpthread 
 
 pilota3 : pilota3.c winsuport2.o memoria.o
-	gcc -Wall -g pilota3.c winsuport2.o -o pilota3 -lcurses
+	gcc -Wall -g pilota3.c winsuport2.o  memoria.o -o pilota3 -lcurses
 
 
 # auxiliars per a les curses

@@ -30,7 +30,7 @@
 #include "memoria.h"
 #include "semafor.h"
 #include "missatge.h"
-
+#include <sys/wait.h>
 
 /* definicio de constants */
 #define SIZE_ARRAY 32
@@ -116,9 +116,9 @@ int *num_pilotes, n_p;
 int n_fil, n_col;		/* numero de files i columnes del taulell */
 int m_por;			/* mida de la porteria (en caracters) */
 int *f_pal, *c_pal, f_p, c_p;		/* posicio del primer caracter de la paleta */
-int f_pil[MAXBALLS], c_pil[MAXBALLS];		/* posicio de la pilota, en valor enter */
-float pos_f[MAXBALLS], pos_c[MAXBALLS];		/* posicio de la pilota, en valor real */
-float vel_f[MAXBALLS], vel_c[MAXBALLS];		/* velocitat de la pilota, en valor real */
+int f_pil, c_pil;		/* posicio de la pilota, en valor enter */
+float pos_f, pos_c;		/* posicio de la pilota, en valor real */
+float vel_f, vel_c;		/* velocitat de la pilota, en valor real */
 
 int *nblocs, n_b;
 int *dirPaleta, dir_p;
@@ -127,28 +127,7 @@ int fi1, fi2;			/* valor de condicions finals */
 char strin[LONGMISS];		/* variable per a generar missatges de text */
 int id_mem_tauler;
 
-/* inicialitzacio variable compartida num_pilotes*/
-n_p = ini_mem(sizeof(int));/* crear zona mem. compartida */
-num_pilotes = map_mem(n_p);/* obtenir adreça mem. compartida */
-*num_pilotes = 1;/* inicialitza variable compartida */
 
-/* inicialitzacio variable compartida nblocs*/
-n_b = ini_mem(sizeof(int));/* crear zona mem. compartida */
-nblocs = map_mem(n_b);/* obtenir adreça mem. compartida */
-*nblocs = 0;/* inicialitza variable compartida */
-
-/* inicialitzacio variable compartida c_pal*/
-c_p = ini_mem(sizeof(int));/* crear zona mem. compartida */
-c_pal = map_mem(c_p);/* obtenir adreça mem. compartida */
-
-/* inicialitzacio variable compartida f_pal*/
-f_p = ini_mem(sizeof(int));/* crear zona mem. compartida */
-f_pal = map_mem(f_p);/* obtenir adreça mem. compartida */
-
-/* inicialitzacio variable compartida dirPaleta*/
-dir_p = ini_mem(sizeof(int));/* crear zona mem. compartida */
-dirPaleta = map_mem(dir_p);/* obtenir adreça mem. compartida */
-*dirPaleta = 0;/* inicialitza variable compartida */
 
 /* funcio per carregar i interpretar el fitxer de configuracio de la partida */
 /* el parametre ha de ser un punter a fitxer de text, posicionat al principi */
@@ -158,7 +137,7 @@ int carrega_configuracio(FILE * fit)
 	int ret = 0;
 	int i = 1;
 	fscanf(fit, "%d %d %d\n", &n_fil, &n_col, &m_por);				/* camp de joc */
-	while(fscanf(fit, "%f %f %f %f\n", &pos_f[i], &pos_c[i], &vel_f[i], &vel_c[i]) == 4)			/* pilota */
+	while(fscanf(fit, "%f %f %f %f\n", &pos_f, &pos_c, &vel_f, &vel_c) == 4)			/* pilota */
 	{
 		if ((n_fil != 0) || (n_col != 0)) 						/* si no dimensions maximes */
 		{
@@ -166,10 +145,10 @@ int carrega_configuracio(FILE * fit)
 				ret = 1;
 			else if (m_por > n_col - 3)
 				ret = 2;
-			else if ((pos_f[i] < 1) || (pos_f[i] >= n_fil - 3) || (pos_c[i] < 1) || (pos_c[i] > n_col - 1))				/* tres files especials: línia d'estat, porteria i paleta */
+			else if ((pos_f < 1) || (pos_f >= n_fil - 3) || (pos_c < 1) || (pos_c > n_col - 1))				/* tres files especials: línia d'estat, porteria i paleta */
 				ret = 3;
 		}
-		if ((vel_f[i] < -1.0) || (vel_f[i] > 1.0) || (vel_c[i] < -1.0) || (vel_c[i] > 1.0))
+		if ((vel_f < -1.0) || (vel_f > 1.0) || (vel_c < -1.0) || (vel_c > 1.0))
 			ret = 4;
 
 		if (ret != 0) 								/* si ha detectat algun error */
@@ -187,11 +166,11 @@ int carrega_configuracio(FILE * fit)
 				break;
 			case 3:
 				fprintf(stderr, "\tposicio de la pilota incorrecta:\n");
-				fprintf(stderr, "\tpos_f= %.2f \tpos_c= %.2f\n", pos_f[i], pos_c[i]);
+				fprintf(stderr, "\tpos_f= %.2f \tpos_c= %.2f\n", pos_f, pos_c);
 				break;
 			case 4:
 				fprintf(stderr, "\tvelocitat de la pilota incorrecta:\n");
-				fprintf(stderr, "\tvel_f= %.2f \tvel_c= %.2f\n", vel_f[i], vel_c[i]);
+				fprintf(stderr, "\tvel_f= %.2f \tvel_c= %.2f\n", vel_f, vel_c);
 				break;
 			}
 			return(ret);
@@ -200,7 +179,7 @@ int carrega_configuracio(FILE * fit)
 
 	}
 	fclose(fit);
-	num_pilotes = i-1;
+	*num_pilotes = i-1;
 	return(ret);
 }
 
@@ -259,18 +238,18 @@ int inicialitza_joc(void)
 	*f_pal = n_fil - 2;						/* posicio inicial de la paleta per defecte */
 	*c_pal = (n_col-MIDA_PALETA) / 2;				/* a baix i centrada */
 	for (i = 0; i < MIDA_PALETA; i++)				/* dibuixar paleta inicial */
-		win_escricar(&f_pal, &c_pal + i, '0', INVERS);
+		win_escricar((intptr_t) f_pal, (intptr_t) c_pal + i, '0', INVERS);
 
 	/* generar la pilota */
-	for (i = 1; i <= num_pilotes; i++) /* for per si volem iniciaŕ els valors de més d'una pilota en params.txt */
+	for (i = 1; i <= *num_pilotes; i++) /* for per si volem iniciaŕ els valors de més d'una pilota en params.txt */
 	{
-		if (pos_f[i] > n_fil - 1)
-			pos_f[i] = n_fil - 1;					/* limita posicio inicial de la pilota */
-		if (pos_c[i] > n_col - 1)
-			pos_c[i] = n_col - 1;
-		f_pil[i] = pos_f[i];
-		c_pil[i] = pos_c[i];							/* dibuixar la pilota inicialment */
-		win_escricar(f_pil[i], c_pil[i], 49+i, INVERS);
+		if (pos_f > n_fil - 1)
+			pos_f = n_fil - 1;					/* limita posicio inicial de la pilota */
+		if (pos_c > n_col - 1)
+			pos_c = n_col - 1;
+		f_pil = pos_f;
+		c_pil = pos_c;							/* dibuixar la pilota inicialment */
+		win_escricar((intptr_t) f_pil, (intptr_t) c_pil, 49+i, INVERS);
 	}
 
 	/* generar els blocs */
@@ -338,17 +317,17 @@ void * mou_paleta(void * nul)
 			if ((tecla == TEC_DRETA) && ((*c_pal + MIDA_PALETA) < n_col - 1))
 			{
 					//pthread_mutex_lock(&mutex);
-					win_escricar(&f_pal, &c_pal, ' ', NO_INV);			/* esborra primer bloc */
-					*c_pal++;							/* actualitza posicio */
-					win_escricar(&f_pal, &c_pal + MIDA_PALETA - 1, '0', INVERS);	/*esc. ultim bloc */
+					win_escricar((intptr_t) f_pal, (intptr_t) c_pal, ' ', NO_INV);			/* esborra primer bloc */
+					(*c_pal)++;							/* actualitza posicio */
+					win_escricar((intptr_t) f_pal, (intptr_t) c_pal + MIDA_PALETA - 1, '0', INVERS);	/*esc. ultim bloc */
 					//pthread_mutex_unlock(&mutex);
 			}
 			if ((tecla == TEC_ESQUER) && (*c_pal > 1)) {
 					//pthread_mutex_lock(&mutex);
-					win_escricar(&f_pal, &c_pal + MIDA_PALETA - 1, ' ', NO_INV);	/*esborra ultim bloc */
-					*c_pal--;							/* actualitza posicio */
+					win_escricar((intptr_t) f_pal, (intptr_t) c_pal + MIDA_PALETA - 1, ' ', NO_INV);	/*esborra ultim bloc */
+					(*c_pal)--;							/* actualitza posicio */
 
-					win_escricar(&f_pal, &c_pal, '0', INVERS);			/* escriure primer bloc */
+					win_escricar((intptr_t) f_pal, (intptr_t) c_pal, '0', INVERS);			/* escriure primer bloc */
 					//pthread_mutex_unlock(&mutex);
 			}
 			if (tecla == TEC_RETURN)
@@ -359,7 +338,7 @@ void * mou_paleta(void * nul)
 		}
 		//pthread_mutex_lock(&mutex);
 		fi1 = result;
-		fi2 = (*nblocs==0 || *num_pilotes==0);
+		fi2 = ((*nblocs==0) || (*num_pilotes==0));
 		//pthread_mutex_unlock(&mutex);
 		win_retard(5);
 	} while(!fi1 && !fi2);
@@ -370,6 +349,28 @@ void * mou_paleta(void * nul)
 /* programa principal */
 int main(int n_args, char *ll_args[])
 {
+	/* inicialitzacio variable compartida num_pilotes*/
+n_p = ini_mem(sizeof(int));/* crear zona mem. compartida */
+num_pilotes = map_mem(n_p);/* obtenir adreça mem. compartida */
+*num_pilotes = 1;/* inicialitza variable compartida */
+
+/* inicialitzacio variable compartida nblocs*/
+n_b = ini_mem(sizeof(int));/* crear zona mem. compartida */
+nblocs = map_mem(n_b);/* obtenir adreça mem. compartida */
+*nblocs = 0;/* inicialitza variable compartida */
+
+/* inicialitzacio variable compartida c_pal*/
+c_p = ini_mem(sizeof(int));/* crear zona mem. compartida */
+c_pal = map_mem(c_p);/* obtenir adreça mem. compartida */
+
+/* inicialitzacio variable compartida f_pal*/
+f_p = ini_mem(sizeof(int));/* crear zona mem. compartida */
+f_pal = map_mem(f_p);/* obtenir adreça mem. compartida */
+
+/* inicialitzacio variable compartida dirPaleta*/
+dir_p = ini_mem(sizeof(int));/* crear zona mem. compartida */
+dirPaleta = map_mem(dir_p);/* obtenir adreça mem. compartida */
+*dirPaleta = 0;/* inicialitza variable compartida */
 	int i;
 	FILE *fit_conf;
 
@@ -428,12 +429,12 @@ int main(int n_args, char *ll_args[])
       sprintf (id_mem_tauler_str, "%d", id_mem_tauler);
       sprintf (fil_str, "%d", n_fil);
       sprintf (col_str, "%d", n_col);
-      sprintf (vel_f_str, "%f", vel_f[id]);
-      sprintf (vel_c_str, "%f", vel_c[id]);
-      sprintf (pos_f_str, "%f", pos_f[id]);
-      sprintf (pos_c_str, "%f", pos_c[id]);
-      sprintf (f_pil_str, "%d", f_pil[id]);
-      sprintf (c_pil_str, "%d", c_pil[id]);
+      sprintf (vel_f_str, "%f", vel_f);
+      sprintf (vel_c_str, "%f", vel_c);
+      sprintf (pos_f_str, "%f", pos_f);
+      sprintf (pos_c_str, "%f", pos_c);
+      sprintf (f_pil_str, "%d", f_pil);
+      sprintf (c_pil_str, "%d", c_pil);
       sprintf (nblocs_str, "%d", *nblocs);
       sprintf (npils_str, "%d", *num_pilotes);
       sprintf (retard_str, "%d", retard);
@@ -472,8 +473,8 @@ int main(int n_args, char *ll_args[])
 
 	} while (!fi1 && !fi2);
 	int stat;
-	for (i=0; i< index; i++){
-		waitpid(tpid[i], &stat, NULL);
+	for (i=0; i < (intptr_t) index; i++){
+		waitpid(tpid[i], &stat, 0);
 	}
 
 	if (nblocs == 0)
