@@ -34,7 +34,7 @@ int id_mem_tauler, n_fil, n_col;
 float vel_f, vel_c, pos_f, pos_c;
 
 
-/*Si hi ha una col.lisió pilota-bloci esborra el bloc */
+/*Si hi ha una col.lisió pilota-bloc i esborra el bloc */
 void comprovar_bloc(int f, int c)
 {
 	int col;
@@ -60,7 +60,7 @@ void comprovar_bloc(int f, int c)
 			//pthread_mutex_unlock(&mutex);
 			col--;
 		}
-		nblocs--;
+		(*nblocs)--;
 
 		if (quin == BLKCHAR)
 		{
@@ -84,8 +84,8 @@ void comprovar_bloc(int f, int c)
 		      sprintf (pos_c_str, "%f", (float)c);
 		      sprintf (f_pil_str, "%d", f);
 		      sprintf (c_pil_str, "%d", c);
-		      sprintf (nblocs_str, "%ls", nblocs);
-		      sprintf (npils_str, "%ls", num_pilotes);
+		      sprintf (nblocs_str, "%d", *nblocs);
+		      sprintf (npils_str, "%d", *num_pilotes);
 		      sprintf (retard_str, "%d", retard);
 					execlp("./pilota3", "pilota3", id_str, id_mem_tauler_str, fil_str,
 					col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
@@ -112,9 +112,9 @@ void comprovar_bloc(int f, int c)
 void control_impacte(void)
 {
 	int i;
-	for(i = 1; i <= *num_pilotes; i++)
+	for(i = 1; i <= (intptr_t) *num_pilotes; i++)
 	{
-		if (*dirPaleta == TEC_DRETA)
+		if ((intptr_t)*dirPaleta == TEC_DRETA)
 		{
 			if (vel_c <= 0.0)					/* pilota cap a l'esquerra */
 				vel_c = -vel_c - 0.2;				/* xoc: canvi de sentit i reduir velocitat */
@@ -126,7 +126,7 @@ void control_impacte(void)
 		}
 		else
 		{
-			if (*dirPaleta == TEC_ESQUER)
+			if ((intptr_t) *dirPaleta == TEC_ESQUER)
 			{
 				if (vel_c >= 0.0)				/* pilota cap a la dreta */
 					vel_c = -vel_c + 0.2;			/* xoc: canvi de sentit i reduir la velocitat */
@@ -138,18 +138,18 @@ void control_impacte(void)
 			}
 			else
 			{							/* XXX trucs no documentats */
-				if (*dirPaleta == TEC_AMUNT)
+				if ((intptr_t) *dirPaleta == TEC_AMUNT)
 					vel_c = 0.0;				/* vertical */
 				else
 				{
-					if (*dirPaleta == TEC_AVALL)
+					if ((intptr_t) *dirPaleta == TEC_AVALL)
 						if (vel_f <= 1.0)
 							vel_f -= 0.2;		/* frenar */
 				}
 			}
 		}
 		// Aqui otra seccion critica
-		*dirPaleta=0;							/* reset perque ja hem aplicat l'efecte */
+		(*dirPaleta)=0;							/* reset perque ja hem aplicat l'efecte */
 	}
 }
 
@@ -158,7 +158,7 @@ float control_impacte2(int c_pil, float velc0)
 	int distApal;
 	float vel_c;
 
-	distApal = c_pil - *c_pal;
+	distApal = c_pil - (intptr_t) *c_pal;
 	if (distApal >= 2*MIDA_PALETA/3)				/* costat dreta */
 		vel_c = 0.5;
 	else if (distApal <= MIDA_PALETA/3)				/* costat esquerra */
@@ -192,7 +192,7 @@ int main(int n_args, char *ll_args[])
     c_pil = atoi(ll_args[10]);
     * nblocs = atoi(ll_args[11]);
     * num_pilotes =  atoi(ll_args[12]);
-    retard = atoi(ll_args[12]);
+    retard = atoi(ll_args[13]);
 
 
     int * addr_tauler = map_mem(id_mem_tauler);
@@ -309,7 +309,7 @@ int main(int n_args, char *ll_args[])
 	} while(!fi3 && !fi2); /* fer bucle fins que la pilota surti de la porteria i llavors acabar el proces????? */
 	int i;
 	int stat;
-	for (i=0; i< ind; i++){
+	for (i=0; i< num_fills; i++){
 		waitpid(tpid[i], &stat, 0);
 	}
 

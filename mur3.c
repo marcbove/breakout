@@ -238,7 +238,7 @@ int inicialitza_joc(void)
 	*f_pal = n_fil - 2;						/* posicio inicial de la paleta per defecte */
 	*c_pal = (n_col-MIDA_PALETA) / 2;				/* a baix i centrada */
 	for (i = 0; i < MIDA_PALETA; i++)				/* dibuixar paleta inicial */
-		win_escricar((intptr_t) f_pal, (intptr_t) c_pal + i, '0', INVERS);
+		win_escricar((intptr_t) *f_pal, (intptr_t) *c_pal + i, '0', INVERS);
 
 	/* generar la pilota */
 	for (i = 1; i <= *num_pilotes; i++) /* for per si volem iniciaŕ els valors de més d'una pilota en params.txt */
@@ -255,8 +255,8 @@ int inicialitza_joc(void)
 	/* generar els blocs */
 	nb = 0;
 	*nblocs = n_col / (BLKSIZE + BLKGAP) - 1;
-	offset = (n_col - *nblocs * (BLKSIZE + BLKGAP) + BLKGAP) / 2;	/* offset de columna inicial */
-	for (i = 0; i < *nblocs; i++)
+	offset = (n_col - (*nblocs) * (BLKSIZE + BLKGAP) + BLKGAP) / 2;	/* offset de columna inicial */
+	for (i = 0; i < (intptr_t) *nblocs; i++)
 	{
 		for (c = 0; c < BLKSIZE; c++)
 		{
@@ -295,7 +295,7 @@ void mostra_final(char *miss)
 	lmarge=(n_col+strlen(miss))/2;
 	sprintf(marge,"%%%ds",lmarge);
 
-	sprintf(strin, marge,miss);
+	sprintf(strin, marge, miss);
 	win_escristr(strin);
 
 	/* espera tecla per a que es pugui veure el missatge */
@@ -317,17 +317,17 @@ void * mou_paleta(void * nul)
 			if ((tecla == TEC_DRETA) && ((*c_pal + MIDA_PALETA) < n_col - 1))
 			{
 					//pthread_mutex_lock(&mutex);
-					win_escricar((intptr_t) f_pal, (intptr_t) c_pal, ' ', NO_INV);			/* esborra primer bloc */
+					win_escricar((intptr_t) *f_pal, (intptr_t) *c_pal, ' ', NO_INV);			/* esborra primer bloc */
 					(*c_pal)++;							/* actualitza posicio */
-					win_escricar((intptr_t) f_pal, (intptr_t) c_pal + MIDA_PALETA - 1, '0', INVERS);	/*esc. ultim bloc */
+					win_escricar((intptr_t) *f_pal, (intptr_t) *c_pal + MIDA_PALETA - 1, '0', INVERS);	/*esc. ultim bloc */
 					//pthread_mutex_unlock(&mutex);
 			}
 			if ((tecla == TEC_ESQUER) && (*c_pal > 1)) {
 					//pthread_mutex_lock(&mutex);
-					win_escricar((intptr_t) f_pal, (intptr_t) c_pal + MIDA_PALETA - 1, ' ', NO_INV);	/*esborra ultim bloc */
+					win_escricar((intptr_t) *f_pal, (intptr_t) *c_pal + MIDA_PALETA - 1, ' ', NO_INV);	/*esborra ultim bloc */
 					(*c_pal)--;							/* actualitza posicio */
 
-					win_escricar((intptr_t) f_pal, (intptr_t) c_pal, '0', INVERS);			/* escriure primer bloc */
+					win_escricar((intptr_t) *f_pal, (intptr_t) *c_pal, '0', INVERS);			/* escriure primer bloc */
 					//pthread_mutex_unlock(&mutex);
 			}
 			if (tecla == TEC_RETURN)
@@ -471,13 +471,14 @@ dirPaleta = map_mem(dir_p);/* obtenir adreça mem. compartida */
 		win_update();
 		win_retard(100);		/* retard del joc */
 
-	} while (!fi1 && !fi2);
+	} while (!fi1 && !((*nblocs) == 0 || (*num_pilotes) == 0));
+	
 	int stat;
-	for (i=0; i < (intptr_t) index; i++){
+	for (i=0; i < (intptr_t) *index; i++){
 		waitpid(tpid[i], &stat, 0);
 	}
 
-	if (nblocs == 0)
+	if ((intptr_t) *nblocs == 0)
 	{
 		sprintf(tiempo, "YOU WIN! Tiempo: %02d:%02d", minuts, segons);
 		mostra_final(tiempo);
