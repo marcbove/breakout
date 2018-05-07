@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>		/* incloure threads */
-#include <unistd.h>	/* fork */	
+#include <unistd.h>	/* fork */
 #include "winsuport2.h"		/* incloure definicions de funcions propies */
 #include "memoria.h"
 #include "semafor.h"
@@ -111,20 +111,44 @@ int pthread_mutex_init(pthread_mutex_t * mutex, const pthread_mutexattr_t * attr
 o bé es pot fer la següent assignació, que inicialitza el mutex amb els valors per defecte*/
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-intptr_t id = 1;
-int num_pilotes = 1;
+intptr_t id = 0;
+int *num_pilotes, n_p;
 int n_fil, n_col;		/* numero de files i columnes del taulell */
 int m_por;			/* mida de la porteria (en caracters) */
-int f_pal, c_pal;		/* posicio del primer caracter de la paleta */
+int *f_pal, *c_pal, f_p, c_p;		/* posicio del primer caracter de la paleta */
 int f_pil[MAXBALLS], c_pil[MAXBALLS];		/* posicio de la pilota, en valor enter */
 float pos_f[MAXBALLS], pos_c[MAXBALLS];		/* posicio de la pilota, en valor real */
 float vel_f[MAXBALLS], vel_c[MAXBALLS];		/* velocitat de la pilota, en valor real */
-int nblocs = 0;
-int dirPaleta = 0;
+
+int *nblocs, n_b;
+int *dirPaleta, dir_p;
 int retard;			/* valor del retard de moviment, en mil.lisegons */
 int fi1, fi2;			/* valor de condicions finals */
 char strin[LONGMISS];		/* variable per a generar missatges de text */
 int id_mem_tauler;
+
+/* inicialitzacio variable compartida num_pilotes*/
+n_p = ini_mem(sizeof(int));/* crear zona mem. compartida */
+num_pilotes = map_mem(n_p);/* obtenir adreça mem. compartida */
+*num_pilotes = 1;/* inicialitza variable compartida */
+
+/* inicialitzacio variable compartida nblocs*/
+n_b = ini_mem(sizeof(int));/* crear zona mem. compartida */
+nblocs = map_mem(n_b);/* obtenir adreça mem. compartida */
+*nblocs = 0;/* inicialitza variable compartida */
+
+/* inicialitzacio variable compartida c_pal*/
+c_p = ini_mem(sizeof(int));/* crear zona mem. compartida */
+c_pal = map_mem(c_p);/* obtenir adreça mem. compartida */
+
+/* inicialitzacio variable compartida f_pal*/
+f_p = ini_mem(sizeof(int));/* crear zona mem. compartida */
+f_pal = map_mem(f_p);/* obtenir adreça mem. compartida */
+
+/* inicialitzacio variable compartida dirPaleta*/
+dir_p = ini_mem(sizeof(int));/* crear zona mem. compartida */
+dirPaleta = map_mem(dir_p);/* obtenir adreça mem. compartida */
+*dirPaleta = 0;/* inicialitza variable compartida */
 
 /* funcio per carregar i interpretar el fitxer de configuracio de la partida */
 /* el parametre ha de ser un punter a fitxer de text, posicionat al principi */
@@ -216,7 +240,7 @@ int inicialitza_joc(void)
 		}
 		return (retwin);
 	}
-	
+
 	id_mem_tauler = ini_mem(retwin);
 	addr_tauler = map_mem(id_mem_tauler);
 	win_set(addr_tauler, n_fil, n_col);
@@ -232,10 +256,10 @@ int inicialitza_joc(void)
 		win_escricar(n_fil - 2, i, ' ', NO_INV);
 
 	n_fil = n_fil - 1;						/* descompta la fila de missatges */
-	f_pal = n_fil - 2;						/* posicio inicial de la paleta per defecte */
-	c_pal = (n_col-MIDA_PALETA) / 2;				/* a baix i centrada */
+	*f_pal = n_fil - 2;						/* posicio inicial de la paleta per defecte */
+	*c_pal = (n_col-MIDA_PALETA) / 2;				/* a baix i centrada */
 	for (i = 0; i < MIDA_PALETA; i++)				/* dibuixar paleta inicial */
-		win_escricar(f_pal, c_pal + i, '0', INVERS);
+		win_escricar(&f_pal, &c_pal + i, '0', INVERS);
 
 	/* generar la pilota */
 	for (i = 1; i <= num_pilotes; i++) /* for per si volem iniciaŕ els valors de més d'una pilota en params.txt */
@@ -246,14 +270,14 @@ int inicialitza_joc(void)
 			pos_c[i] = n_col - 1;
 		f_pil[i] = pos_f[i];
 		c_pil[i] = pos_c[i];							/* dibuixar la pilota inicialment */
-		win_escricar(f_pil[i], c_pil[i], 48+i, INVERS);
+		win_escricar(f_pil[i], c_pil[i], 49+i, INVERS);
 	}
 
 	/* generar els blocs */
 	nb = 0;
-	nblocs = n_col / (BLKSIZE + BLKGAP) - 1;
-	offset = (n_col - nblocs * (BLKSIZE + BLKGAP) + BLKGAP) / 2;	/* offset de columna inicial */
-	for (i = 0; i < nblocs; i++)
+	*nblocs = n_col / (BLKSIZE + BLKGAP) - 1;
+	offset = (n_col - *nblocs * (BLKSIZE + BLKGAP) + BLKGAP) / 2;	/* offset de columna inicial */
+	for (i = 0; i < *nblocs; i++)
 	{
 		for (c = 0; c < BLKSIZE; c++)
 		{
@@ -266,7 +290,7 @@ int inicialitza_joc(void)
 		}
 		offset += BLKSIZE + BLKGAP;
 	}
-	nblocs = nb / BLKSIZE;
+	*nblocs = nb / BLKSIZE;
 	/* generar les defenses */
 	nb = n_col / (BLKSIZE + 2 * BLKGAP) - 2;
 	offset = (n_col - nb * (BLKSIZE + 2 * BLKGAP) + BLKGAP) / 2;	/* offset de columna inicial */
@@ -299,115 +323,6 @@ void mostra_final(char *miss)
 	getchar();
 }
 
-/*Si hi ha una col.lisió pilota-bloci esborra el bloc */
-void comprovar_bloc(int f, int c)
-{
-	int col;
-	//pthread_mutex_lock(&mutex);
-	char quin = win_quincar(f, c);
-	//pthread_mutex_unlock(&mutex);
-
-	if (quin == BLKCHAR || quin == FRNTCHAR)
-	{
-		col = c;
-		while (win_quincar(f, col) != ' ')
-		{
-			//pthread_mutex_lock(&mutex);
-			win_escricar(f, col, ' ', NO_INV);
-			//pthread_mutex_unlock(&mutex);
-			col++;
-		}
-		col = c - 1;
-		while (win_quincar(f, col) != ' ')
-		{
-			//pthread_mutex_lock(&mutex);
-			win_escricar(f, col, ' ', NO_INV);
-			//pthread_mutex_unlock(&mutex);
-			col--;
-		}
-		nblocs--;
-
-		if (quin == BLKCHAR)
-		{
-			//pthread_mutex_lock(&mutex);
-			id++;
-			//pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
-			pos_f[id] = f;
-			pos_c[id] = c;
-			f_pil[id] = f;
-			c_pid[id] = c;
-			vel_f[id] = (float)rand()/(float)(RAND_MAX/2)-1;
-			vel_c[id] = (float)rand()/(float)(RAND_MAX/2)-1;
-			num_pilotes++;
-			//pthread_mutex_unlock(&mutex);
-		}
-	}
-}
-
-/* funcio per a calcular rudimentariament els efectes amb la pala */
-/* no te en compta si el moviment de la paleta no és recent */
-/* cal tenir en compta que després es calcula el rebot */
-void control_impacte(void)
-{
-	int i;
-	for(i = 1; i <= num_pilotes; i++)
-	{
-		if (dirPaleta == TEC_DRETA)
-		{
-			if (vel_c[i] <= 0.0)					/* pilota cap a l'esquerra */
-				vel_c[i] = -vel_c[i] - 0.2;				/* xoc: canvi de sentit i reduir velocitat */
-			else
-			{							/* a favor: incrementar velocitat */
-				if (vel_c[i] <= 0.8)
-					vel_c[i] += 0.2;
-			}
-		}
-		else
-		{
-			if (dirPaleta == TEC_ESQUER)
-			{
-				if (vel_c[i] >= 0.0)				/* pilota cap a la dreta */
-					vel_c[i] = -vel_c[i] + 0.2;			/* xoc: canvi de sentit i reduir la velocitat */
-				else
-				{						/* a favor: incrementar velocitat */
-					if (vel_c[i] >= -0.8)
-						vel_c[i] -= 0.2;
-				}
-			}
-			else
-			{							/* XXX trucs no documentats */
-				if (dirPaleta == TEC_AMUNT)
-					vel_c[i] = 0.0;				/* vertical */
-				else
-				{
-					if (dirPaleta == TEC_AVALL)
-						if (vel_f[i] <= 1.0)
-							vel_f[i] -= 0.2;		/* frenar */
-				}
-			}
-		}
-		// Aqui otra seccion critica
-		dirPaleta=0;							/* reset perque ja hem aplicat l'efecte */
-	}
-}
-
-float control_impacte2(int c_pil, float velc0)
-{
-	int distApal;
-	float vel_c;
-
-	distApal = c_pil - c_pal;
-	if (distApal >= 2*MIDA_PALETA/3)				/* costat dreta */
-		vel_c = 0.5;
-	else if (distApal <= MIDA_PALETA/3)				/* costat esquerra */
-		vel_c = -0.5;
-	else if (distApal == MIDA_PALETA/2)				/* al centre */
-		vel_c = 0.0;
-	else 								/*: rebot normal */
-		vel_c = velc0;
-	return vel_c;
-}
-
 /* funcio per moure la paleta segons la tecla premuda */
 /* retorna un boolea indicant si l'usuari vol acabar */
 void * mou_paleta(void * nul)
@@ -420,30 +335,31 @@ void * mou_paleta(void * nul)
 		//pthread_mutex_unlock(&mutex);
 
 		if (tecla != 0) {
-			if ((tecla == TEC_DRETA) && ((c_pal + MIDA_PALETA) < n_col - 1))
+			if ((tecla == TEC_DRETA) && ((*c_pal + MIDA_PALETA) < n_col - 1))
 			{
 					//pthread_mutex_lock(&mutex);
-					win_escricar(f_pal, c_pal, ' ', NO_INV);			/* esborra primer bloc */
-					c_pal++;							/* actualitza posicio */
-					win_escricar(f_pal, c_pal + MIDA_PALETA - 1, '0', INVERS);	/*esc. ultim bloc */
+					win_escricar(&f_pal, &c_pal, ' ', NO_INV);			/* esborra primer bloc */
+					*c_pal++;							/* actualitza posicio */
+					win_escricar(&f_pal, &c_pal + MIDA_PALETA - 1, '0', INVERS);	/*esc. ultim bloc */
 					//pthread_mutex_unlock(&mutex);
 			}
-			if ((tecla == TEC_ESQUER) && (c_pal > 1)) {
+			if ((tecla == TEC_ESQUER) && (*c_pal > 1)) {
 					//pthread_mutex_lock(&mutex);
-					win_escricar(f_pal, c_pal + MIDA_PALETA - 1, ' ', NO_INV);	/*esborra ultim bloc */
-					c_pal--;							/* actualitza posicio */
+					win_escricar(&f_pal, &c_pal + MIDA_PALETA - 1, ' ', NO_INV);	/*esborra ultim bloc */
+					*c_pal--;							/* actualitza posicio */
 
-					win_escricar(f_pal, c_pal, '0', INVERS);			/* escriure primer bloc */
+					win_escricar(&f_pal, &c_pal, '0', INVERS);			/* escriure primer bloc */
 					//pthread_mutex_unlock(&mutex);
 			}
 			if (tecla == TEC_RETURN)
 				result = 1;							/* final per pulsacio RETURN */
 			//pthread_mutex_lock(&mutex);
-			dirPaleta = tecla;							/* per a afectar al moviment de les pilotes*/
+			*dirPaleta = tecla;							/* per a afectar al moviment de les pilotes*/
 			//pthread_mutex_unlock(&mutex);
 		}
 		//pthread_mutex_lock(&mutex);
 		fi1 = result;
+		fi2 = (*nblocs==0 || *num_pilotes==0);
 		//pthread_mutex_unlock(&mutex);
 		win_retard(5);
 	} while(!fi1 && !fi2);
@@ -468,7 +384,7 @@ int main(int n_args, char *ll_args[])
 
 	fit_conf = fopen(ll_args[1], "rt");	/* intenta obrir el fitxer */
 
-	if (!fit_conf) 
+	if (!fit_conf)
 	{
 		fprintf(stderr, "Error: no s'ha pogut obrir el fitxer \'%s\'\n",
 			ll_args[1]);
@@ -479,19 +395,21 @@ int main(int n_args, char *ll_args[])
 		exit(3);	/* aborta si hi ha algun problema en el fitxer */
 
 	if (n_args == 3) /* si s'ha especificat parametre de retard */
-	{	
+	{
 		retard = atoi(ll_args[2]);	/* convertir-lo a enter */
 		if (retard < 10)
 			retard = 10;	/* ver(sizeof members[0])) ; identificar limits */
-		
+
 		if (retard > 1000)
 			retard = 1000;
-	} 
+	}
 	else
 		retard = 100;	/* altrament, fixar retard per defecte */
 
 	printf("Joc del Mur: prem RETURN per continuar:\n");
 	getchar();
+
+
 
 	if (inicialitza_joc() != 0)	/* intenta crear el taulell de joc */
 		exit(4);	/* aborta si hi ha algun problema amb taulell */
@@ -505,30 +423,30 @@ int main(int n_args, char *ll_args[])
 	//pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
 	tpid[id] = fork();
 	if (tpid[id] == 0)   /* Es tracta del proces fill */
-    {
-  		sprintf (id_str, "%d", 1);  
-        sprintf (id_mem_tauler_str, "%d", id_mem_tauler);
-        sprintf (fil_str, "%d", n_fil);
-        sprintf (col_str, "%d", n_col);
-        sprintf (vel_f_str, "%f", vel_f[id]);
-        sprintf (vel_c_str, "%f", vel_c[id]);
-        sprintf (pos_f_str, "%f", pos_f[id]);
-        sprintf (pos_c_str, "%f", pos_c[id]);
-        sprintf (f_pil_str, "%d", f_pil[id]);
-        sprintf (c_pil_str, "%d", c_pil[id]);
-        sprintf (nblocs_str, "%d", nblocs);
-        sprintf (npils_str, "%d", num_pilotes);
-        sprintf (retard_str, "%d", retard);
-		execlp("./pilota3", "pilota3", id_str, id_mem_tauler_str, fil_str, 
-			col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str, 
+  {
+  		sprintf (id_str, "%d", 0);
+      sprintf (id_mem_tauler_str, "%d", id_mem_tauler);
+      sprintf (fil_str, "%d", n_fil);
+      sprintf (col_str, "%d", n_col);
+      sprintf (vel_f_str, "%f", vel_f[id]);
+      sprintf (vel_c_str, "%f", vel_c[id]);
+      sprintf (pos_f_str, "%f", pos_f[id]);
+      sprintf (pos_c_str, "%f", pos_c[id]);
+      sprintf (f_pil_str, "%d", f_pil[id]);
+      sprintf (c_pil_str, "%d", c_pil[id]);
+      sprintf (nblocs_str, "%d", *nblocs);
+      sprintf (npils_str, "%d", *num_pilotes);
+      sprintf (retard_str, "%d", retard);
+			execlp("./pilota3", "pilota3", id_str, id_mem_tauler_str, fil_str,
+			col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
 			c_pil_str, nblocs_str, npils_str, retard_str, (char *)0);
-        fprintf(stderr, "Error: No puc executar el proces fill \'pilota3\' \n");
-        exit(1);  /* Retornem error */
+      fprintf(stderr, "Error: No puc executar el proces fill \'pilota3\' \n");
+      exit(1);  /* Retornem error */
 	}
-    else if (tpid[1] <  0 )     /* ERROR*/
-    {
+  else if (tpid[0] <  0 )     /* ERROR*/
+  {
     	fprintf(stderr, "Hi ha hagut un error en la creacio del proces");
-    }
+  }
 
 	pthread_create(&tid[0],NULL, &mou_paleta, (void *) NULL);
 
@@ -537,13 +455,13 @@ int main(int n_args, char *ll_args[])
 	int segons = 0, minuts = 0;		/* variable segundos y minutos inicializados a 0 */
 	char tiempo[LONGMISS];			/* variable 'String' para tiempo del tamaño maximo que se puede imprimir por pantalla */
 
-	do 
+	do
 	{
 		t_actual = clock();
 		segons = ((((float) t_actual - (float) inici_temps)/CLOCKS_PER_SEC)*100)-60 * minuts;
 		if (segons >= 60)
 			minuts ++;
-		
+
 		//pthread_mutex_lock(&mutex);
 		memset(tiempo, 0, sizeof tiempo);
 		sprintf(tiempo, "Tiempo: %02d:%02d", minuts, segons);
@@ -553,15 +471,10 @@ int main(int n_args, char *ll_args[])
 		win_retard(100);		/* retard del joc */
 
 	} while (!fi1 && !fi2);
-
-	/*t_actual = clock();
-	segons = ((((float) t_actual - (float) inici_temps)/CLOCKS_PER_SEC)*100)-60 * minuts;
-	if (segons >= 60)
-	{
-		segons = 0;
-		minuts++;
-	}	
-	memset(tiempo, 0, sizeof tiempo);*/
+	int stat;
+	for (i=0; i< index; i++){
+		waitpid(tpid[i], &stat, NULL);
+	}
 
 	if (nblocs == 0)
 	{
