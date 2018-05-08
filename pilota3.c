@@ -31,8 +31,8 @@
 pid_t tpid[MAXBALLS];
 int *c_pal, *f_pal, *nblocs, *num_pilotes, *dirPaleta, retard, ind, c_pil, f_pil, num_fills;
 int id_mem_tauler, n_fil, n_col;
-int num_pi, n_blocs;
-float vel_f, vel_c, pos_f, pos_c;
+int n_p, n_b;
+float vel_f, vel_c, pos_f, pos_c, dir_p, c_p, f_p;
 
 
 /*Si hi ha una col.lisió pilota-bloc i esborra el bloc */
@@ -61,7 +61,7 @@ void comprovar_bloc(int f, int c)
 			//pthread_mutex_unlock(&mutex);
 			col--;
 		}
-		(*nblocs)--;
+		
 
 		if (quin == BLKCHAR)
 		{
@@ -71,26 +71,33 @@ void comprovar_bloc(int f, int c)
 			char f_pil_str[SIZE_ARRAY], c_pil_str[SIZE_ARRAY];
 			char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY];
 			char nblocs_str[SIZE_ARRAY], npils_str[SIZE_ARRAY], retard_str[SIZE_ARRAY];
+			char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY];
 			tpid[num_fills] = fork();
 			//pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
 			if (tpid[num_fills] == 0)   /* Es tracta del proces fill */
 		  {
-		  		/*sprintf (id_str, "%d", num_fills);
-		      sprintf (id_mem_tauler_str, "%d", id_mem_tauler);
-		      sprintf (fil_str, "%d", n_fil);
-		      sprintf (col_str, "%d", n_col);
-		      sprintf (vel_f_str, "%f", (float)rand()/(float)(RAND_MAX/2)-1);
-		      sprintf (vel_c_str, "%f", (float)rand()/(float)(RAND_MAX/2)-1);
-		      sprintf (pos_f_str, "%f", (float)f);
-		      sprintf (pos_c_str, "%f", (float)c);
-		      sprintf (f_pil_str, "%d", f);
-		      sprintf (c_pil_str, "%d", c);
-		      sprintf (nblocs_str, "%d", nblocs);
-		      sprintf (npils_str, "%d", num_pilotes);
-		      sprintf (retard_str, "%d", retard);
+		     sprintf (id_str, "%d", n_p);
+      sprintf (id_mem_tauler_str, "%d", id_mem_tauler);
+      sprintf (fil_str, "%d", n_fil);
+      sprintf (col_str, "%d", n_col);
+      sprintf (vel_f_str, "%f", (float)rand()/(float)(RAND_MAX/2)-1);
+      sprintf (vel_c_str, "%f", (float)rand()/(float)(RAND_MAX/2)-1);
+      sprintf (pos_f_str, "%f", f);
+      sprintf (pos_c_str, "%f", c);
+      sprintf (f_pil_str, "%d", f);
+      sprintf (c_pil_str, "%d", c);
+      sprintf (nblocs_str, "%d", n_b);
+      sprintf (npils_str, "%d", n_p);
+      sprintf (retard_str, "%d", retard);
+      sprintf (c_pal_str, "%d", c_p);
+      sprintf (f_pal_str, "%d", f_p);
+      sprintf (dirPaleta_str, "%d", dir_p);
+      sprintf (f_pal_str, "%d", f_p);
+      sprintf (dirPaleta_str, "%d", dir_p);
+	
 					execlp("./pilota3", "pilota3", id_str, id_mem_tauler_str, fil_str,
 					col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
-					c_pil_str, nblocs_str, npils_str, retard_str, (char *)0);
+					c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, dirPaleta_str, (char *)0);
 		      fprintf(stderr, "Error: No puc executar el proces fill \'pilota3\' \n");
 		      exit(1);  /* Retornem error */
 			}
@@ -99,11 +106,11 @@ void comprovar_bloc(int f, int c)
 		    	fprintf(stderr, "Hi ha hagut un error en la creacio del proces");
 		  }
 
-
 			(*num_pilotes)++;
 			num_fills++;
 			//pthread_mutex_unlock(&mutex);
 		}
+	(*nblocs)--;
 	}
 }
 
@@ -113,7 +120,7 @@ void comprovar_bloc(int f, int c)
 void control_impacte(void)
 {
 	int i;
-	for(i = 1; i <= (intptr_t) *num_pilotes; i++)
+	for(i = 1; i <=  *num_pilotes; i++)
 	{
 		if ((intptr_t)*dirPaleta == TEC_DRETA)
 		{
@@ -127,7 +134,7 @@ void control_impacte(void)
 		}
 		else
 		{
-			if ((intptr_t) *dirPaleta == TEC_ESQUER)
+			if (*dirPaleta == TEC_ESQUER)
 			{
 				if (vel_c >= 0.0)				/* pilota cap a la dreta */
 					vel_c = -vel_c + 0.2;			/* xoc: canvi de sentit i reduir la velocitat */
@@ -139,11 +146,11 @@ void control_impacte(void)
 			}
 			else
 			{							/* XXX trucs no documentats */
-				if ((intptr_t) *dirPaleta == TEC_AMUNT)
+				if (*dirPaleta == TEC_AMUNT)
 					vel_c = 0.0;				/* vertical */
 				else
 				{
-					if ((intptr_t) *dirPaleta == TEC_AVALL)
+					if (*dirPaleta == TEC_AVALL)
 						if (vel_f <= 1.0)
 							vel_f -= 0.2;		/* frenar */
 				}
@@ -179,8 +186,7 @@ corresponent   (identificador   ‘1’   per   la   primera,   ‘2’   per   
 int main(int n_args, char *ll_args[])
 //void * mou_pilota(void * ind)
 {
-	printf("hei ipajfśdkjdklñf śdkjf'skdjgdfjklgklñ\n");
-
+	printf("hola\n");
 	int fi2 = 0, fi3 = 0;
 	/* Parsing arguments */
 	ind = (intptr_t)atoi(ll_args[1]);
@@ -193,33 +199,27 @@ int main(int n_args, char *ll_args[])
 	pos_c = atof(ll_args[8]);
 	f_pil = atoi(ll_args[9]);
 	c_pil = atoi(ll_args[10]);
-	n_blocs = atoi(ll_args[11]);
-	num_pi =  atoi(ll_args[12]);
+	n_b = atoi(ll_args[11]);
+	n_p =  atoi(ll_args[12]);
 	retard = atoi(ll_args[13]);
+	c_p = atoi(ll_args[14]);
+	f_p = atoi(ll_args[15]);
+	dir_p = atoi(ll_args[16]);
+	
 
 
-
-
+	printf("VA direccion mem %d \n", id_mem_tauler);
     void * addr_tauler = map_mem(id_mem_tauler);
     win_set(addr_tauler, n_fil, n_col);
+    printf("VA direccion mem %d \n", id_mem_tauler);
+		num_pilotes = map_mem(n_p);
+		printf("VA pelotas %d \n", n_p);
+		nblocs = map_mem(n_b);
+		printf("VA nblocs %d \n", n_b);
+		c_pal = map_mem(c_p);
+		f_pal = map_mem(f_p);
+		dirPaleta = map_mem(dir_p);
 
-		num_pilotes = map_mem(num_pi);
-		printf ("id %d \n", ind);
-		printf ("id_mem_tauler_str %d \n", id_mem_tauler);
-		printf ("fil_str %d \n", n_fil);
-		printf ("col_str %d \n", n_col);
-		printf ("vel_f_str %f \n", vel_f);
-		printf ("vel_c_str %f \n", vel_c);
-		printf ("pos_f_str %f \n", pos_f);
-		nblocs = map_mem(n_blocs);
-
-
-		printf ("pos_c_str %f \n", pos_c);
-		printf ("f_pil_str %d \n", f_pil);
-		printf ("c_pil_str %d \n", c_pil);
-		printf ("nblocs_str %d \n", *nblocs);
-		printf ("npils_str %d \n", *num_pilotes);
-		printf ("retard_str %d \n", retard);
 
 	int f_h, c_h;
 	char rh, rv, rd, no;
@@ -296,7 +296,7 @@ int main(int n_args, char *ll_args[])
 			if (no == ' ')
 			{	/* verificar posicio definitiva *//* si no hi ha obstacle */
 				//pthread_mutex_lock(&mutex);
-				win_escricar(f_pil, c_pil, ' ', INVERS);	/* esborra pilota */
+				win_escricar(f_pil, c_pil, ' ', NO_INV);	/* esborra pilota */
 				//pthread_mutex_unlock(&mutex);
 				pos_f += vel_f;
 				pos_c += vel_c;

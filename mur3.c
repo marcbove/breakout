@@ -420,6 +420,7 @@ dirPaleta = map_mem(dir_p);/* obtenir adreça mem. compartida */
 	char f_pil_str[SIZE_ARRAY], c_pil_str[SIZE_ARRAY];
 	char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY];
 	char nblocs_str[SIZE_ARRAY], npils_str[SIZE_ARRAY], retard_str[SIZE_ARRAY];
+	char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY];
 
 	pthread_create(&tid[0],NULL, &mou_paleta, (void *) NULL);
 	//pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
@@ -440,23 +441,13 @@ dirPaleta = map_mem(dir_p);/* obtenir adreça mem. compartida */
       sprintf (nblocs_str, "%d", n_b);
       sprintf (npils_str, "%d", n_p);
       sprintf (retard_str, "%d", retard);
-			printf ("id %s \n", id_str);
-			/*printf ("id_mem_tauler_str %s \n", id_mem_tauler_str);
-			printf ("fil_str %s \n", fil_str);
-			printf ("col_str %s \n", col_str);
-			printf ("vel_f_str %s \n", vel_f_str);
-			printf ("vel_c_str %s \n", vel_c_str);
-			printf ("pos_f_str %s \n", pos_f_str);
-			printf ("pos_c_str %s \n", pos_c_str);
-			printf ("f_pil_str %s \n", f_pil_str);
-			printf ("c_pil_str %s \n", c_pil_str);
-			printf ("nblocs_str %s \n", nblocs_str);
-			printf ("npils_str %s \n", npils_str);
-			printf ("retard_str %s \n", retard_str);*/
+      sprintf (c_pal_str, "%d", c_p);
+      sprintf (f_pal_str, "%d", f_p);
+      sprintf (dirPaleta_str, "%d", dir_p);
 
 			execlp("./pilota3", "pilota3", id_str, id_mem_tauler_str, fil_str,
 			col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
-			c_pil_str, nblocs_str, npils_str, retard_str, (char *)0);
+			c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, dirPaleta_str, (char *)0);
       fprintf(stderr, "Error: No puc executar el proces fill \'pilota3\' \n");
       exit(1);  /* Retornem error */
 	}
@@ -464,9 +455,7 @@ dirPaleta = map_mem(dir_p);/* obtenir adreça mem. compartida */
   {
     	fprintf(stderr, "Hi ha hagut un error en la creacio del proces");
   }
-	printf("hei kkkkkooouuuuubbbb");
-
-
+	
 	clock_t inici_temps = clock();		/* variable tipo tiempo para tiempo inicial */
 	clock_t t_actual = clock();		/* variable tipo tiempo para tiempo actual */
 	int segons = 0, minuts = 0;		/* variable segundos y minutos inicializados a 0 */
@@ -507,6 +496,11 @@ dirPaleta = map_mem(dir_p);/* obtenir adreça mem. compartida */
 
 	win_fi();		/* tanca les curses */
 	elim_mem(id_mem_tauler);
+	elim_mem(n_p);
+	elim_mem(n_b);
+	elim_mem(c_p);
+	elim_mem(f_p);
+	elim_mem(dir_p);
 
 	return (0);		/* retorna sense errors d'execucio */
 }
