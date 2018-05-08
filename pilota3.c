@@ -31,6 +31,7 @@
 pid_t tpid[MAXBALLS];
 int *c_pal, *f_pal, *nblocs, *num_pilotes, *dirPaleta, retard, ind, c_pil, f_pil, num_fills;
 int id_mem_tauler, n_fil, n_col;
+int num_pi, n_blocs;
 float vel_f, vel_c, pos_f, pos_c;
 
 
@@ -74,7 +75,7 @@ void comprovar_bloc(int f, int c)
 			//pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
 			if (tpid[num_fills] == 0)   /* Es tracta del proces fill */
 		  {
-		  		sprintf (id_str, "%d", num_fills);
+		  		/*sprintf (id_str, "%d", num_fills);
 		      sprintf (id_mem_tauler_str, "%d", id_mem_tauler);
 		      sprintf (fil_str, "%d", n_fil);
 		      sprintf (col_str, "%d", n_col);
@@ -84,8 +85,8 @@ void comprovar_bloc(int f, int c)
 		      sprintf (pos_c_str, "%f", (float)c);
 		      sprintf (f_pil_str, "%d", f);
 		      sprintf (c_pil_str, "%d", c);
-		      sprintf (nblocs_str, "%d", *nblocs);
-		      sprintf (npils_str, "%d", *num_pilotes);
+		      sprintf (nblocs_str, "%d", nblocs);
+		      sprintf (npils_str, "%d", num_pilotes);
 		      sprintf (retard_str, "%d", retard);
 					execlp("./pilota3", "pilota3", id_str, id_mem_tauler_str, fil_str,
 					col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
@@ -98,7 +99,7 @@ void comprovar_bloc(int f, int c)
 		    	fprintf(stderr, "Hi ha hagut un error en la creacio del proces");
 		  }
 
-			
+
 			(*num_pilotes)++;
 			num_fills++;
 			//pthread_mutex_unlock(&mutex);
@@ -178,25 +179,47 @@ corresponent   (identificador   ‘1’   per   la   primera,   ‘2’   per   
 int main(int n_args, char *ll_args[])
 //void * mou_pilota(void * ind)
 {
+	printf("hei ipajfśdkjdklñf śdkjf'skdjgdfjklgklñ\n");
+
 	int fi2 = 0, fi3 = 0;
 	/* Parsing arguments */
 	ind = (intptr_t)atoi(ll_args[1]);
 	id_mem_tauler = atoi(ll_args[2]);
 	n_fil = atoi(ll_args[3]);
-    n_col = atoi(ll_args[4]);
-    vel_f = atof(ll_args[5]);
-    vel_c = atof(ll_args[6]);
-    pos_f = atof(ll_args[7]);
-    pos_c = atof(ll_args[8]);
-    f_pil = atoi(ll_args[9]);
-    c_pil = atoi(ll_args[10]);
-    * nblocs = atoi(ll_args[11]);
-    * num_pilotes =  atoi(ll_args[12]);
-    retard = atoi(ll_args[13]);
+	n_col = atoi(ll_args[4]);
+	vel_f = atof(ll_args[5]);
+	vel_c = atof(ll_args[6]);
+	pos_f = atof(ll_args[7]);
+	pos_c = atof(ll_args[8]);
+	f_pil = atoi(ll_args[9]);
+	c_pil = atoi(ll_args[10]);
+	n_blocs = atoi(ll_args[11]);
+	num_pi =  atoi(ll_args[12]);
+	retard = atoi(ll_args[13]);
 
 
-    int * addr_tauler = map_mem(id_mem_tauler);
+
+
+    void * addr_tauler = map_mem(id_mem_tauler);
     win_set(addr_tauler, n_fil, n_col);
+
+		num_pilotes = map_mem(num_pi);
+		printf ("id %d \n", ind);
+		printf ("id_mem_tauler_str %d \n", id_mem_tauler);
+		printf ("fil_str %d \n", n_fil);
+		printf ("col_str %d \n", n_col);
+		printf ("vel_f_str %f \n", vel_f);
+		printf ("vel_c_str %f \n", vel_c);
+		printf ("pos_f_str %f \n", pos_f);
+		nblocs = map_mem(n_blocs);
+
+
+		printf ("pos_c_str %f \n", pos_c);
+		printf ("f_pil_str %d \n", f_pil);
+		printf ("c_pil_str %d \n", c_pil);
+		printf ("nblocs_str %d \n", *nblocs);
+		printf ("npils_str %d \n", *num_pilotes);
+		printf ("retard_str %d \n", retard);
 
 	int f_h, c_h;
 	char rh, rv, rd, no;
@@ -304,7 +327,7 @@ int main(int n_args, char *ll_args[])
 		//pthread_mutex_lock(&mutex);
 		fi2 = ((*nblocs) == 0 || (*num_pilotes) == 0);
 		//pthread_mutex_unlock(&mutex);
-		win_retard(retard);
+		win_retard(100);
 
 	} while(!fi3 && !fi2); /* fer bucle fins que la pilota surti de la porteria i llavors acabar el proces????? */
 	int i;
