@@ -427,34 +427,34 @@ dirPaleta = map_mem(dir_p);/* obtenir adreça mem. compartida */
 	tpid[id] = fork();
 
 	if (tpid[id] == (pid_t)0)   /* Es tracta del proces fill */
-  {
+  	{
   		sprintf (id_str, "%d", (int) id);
-      sprintf (id_mem_tauler_str, "%d", id_mem_tauler);
-      sprintf (fil_str, "%d", n_fil);
-      sprintf (col_str, "%d", n_col);
-      sprintf (vel_f_str, "%f", vel_f);
-      sprintf (vel_c_str, "%f", vel_c);
-      sprintf (pos_f_str, "%f", pos_f);
-      sprintf (pos_c_str, "%f", pos_c);
-      sprintf (f_pil_str, "%d", f_pil);
-      sprintf (c_pil_str, "%d", c_pil);
-      sprintf (nblocs_str, "%d", n_b);
-      sprintf (npils_str, "%d", n_p);
-      sprintf (retard_str, "%d", retard);
-      sprintf (c_pal_str, "%d", c_p);
-      sprintf (f_pal_str, "%d", f_p);
-      sprintf (dirPaleta_str, "%d", dir_p);
+      	sprintf (id_mem_tauler_str, "%d", id_mem_tauler);
+      	sprintf (fil_str, "%d", n_fil);
+      	sprintf (col_str, "%d", n_col);
+      	sprintf (vel_f_str, "%f", vel_f);
+      	sprintf (vel_c_str, "%f", vel_c);
+      	sprintf (pos_f_str, "%f", pos_f);
+      	sprintf (pos_c_str, "%f", pos_c);
+      	sprintf (f_pil_str, "%d", f_pil);
+      	sprintf (c_pil_str, "%d", c_pil);
+      	sprintf (nblocs_str, "%d", n_b);
+      	sprintf (npils_str, "%d", n_p);
+      	sprintf (retard_str, "%d", retard);
+      	sprintf (c_pal_str, "%d", c_p);
+      	sprintf (f_pal_str, "%d", f_p);
+      	sprintf (dirPaleta_str, "%d", dir_p);
 
-			execlp("./pilota3", "pilota3", id_str, id_mem_tauler_str, fil_str,
+		execlp("./pilota3", "pilota3", id_str, id_mem_tauler_str, fil_str,
 			col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
 			c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, dirPaleta_str, (char *)0);
-      fprintf(stderr, "Error: No puc executar el proces fill \'pilota3\' \n");
-      exit(1);  /* Retornem error */
+      	fprintf(stderr, "Error: No puc executar el proces fill \'pilota3\' \n");
+      	exit(1);  /* Retornem error */
 	}
-  else if (tpid[0] <  0 )     /* ERROR*/
-  {
+  	else if (tpid[0] <  0 )     /* ERROR*/
+  	{
     	fprintf(stderr, "Hi ha hagut un error en la creacio del proces");
-  }
+  	}
 	
 	clock_t inici_temps = clock();		/* variable tipo tiempo para tiempo inicial */
 	clock_t t_actual = clock();		/* variable tipo tiempo para tiempo actual */
