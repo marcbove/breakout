@@ -1,3 +1,10 @@
+#  amb processos sincronitzats (semafors i busties)
+mur4 : mur4.c winsuport2.o memoria.o semafor.o missatge.o pilota4 
+	gcc -Wall -g mur4.c winsuport2.o memoria.o semafor.o missatge.o -o mur4 -lcurses -lpthread 
+
+pilota4 : pilota4.c winsuport2.o memoria.o semafor.o missatge.o
+	gcc -Wall -g pilota4.c winsuport2.o  memoria.o semafor.o missatge.o -o pilota4 -lcurses
+
 #  amb processos
 mur3 : mur3.c winsuport2.o memoria.o pilota3
 	gcc -Wall -g mur3.c winsuport2.o memoria.o -o mur3 -lcurses -lpthread 
