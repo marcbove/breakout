@@ -72,7 +72,7 @@ void comprovar_bloc(int f, int c)
 			char f_pil_str[SIZE_ARRAY], c_pil_str[SIZE_ARRAY];
 			char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY];
 			char nblocs_str[SIZE_ARRAY], npils_str[SIZE_ARRAY], retard_str[SIZE_ARRAY];
-			char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY], fi_1[SIZE_ARRAY];
+			char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY], fi1_str[SIZE_ARRAY];
 			
 			tpid[num_fills] = fork();
 			//pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
