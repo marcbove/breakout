@@ -163,7 +163,7 @@ int carrega_configuracio(FILE * fit)
 
 	}
 	fclose(fit);
-	num_pilotes = i;
+	num_pilotes = i-1;
 	return(ret);
 }
 
@@ -225,8 +225,9 @@ int inicialitza_joc(void)
 			pos_c[i] = n_col - 1;
 		f_pil[i] = pos_f[i];
 		c_pil[i] = pos_c[i];							/* dibuixar la pilota inicialment */
-		win_escricar(f_pil[i], c_pil[i], i, INVERS);
+		win_escricar(f_pil[i], c_pil[i], 48+i, INVERS);
 	}
+
 	/* generar els blocs */
 	nb = 0;
 	nblocs = n_col / (BLKSIZE + BLKGAP) - 1;
@@ -346,34 +347,44 @@ void * mou_pilota(void * index);
 void comprovar_bloc(int f, int c)
 {
 	int col;
+	
 	char quin = win_quincar(f, c);
 	
+
 	if (quin == BLKCHAR || quin == FRNTCHAR)
 	{
-		/* TODO: generar nova pilota */
-		if (quin == BLKCHAR)
-		{
-			pos_f[id] = f;
-			pos_c[id] = c;
-			vel_f[id] = (float)rand()/(float)(RAND_MAX/2)-1;
-			vel_c[id] = (float)rand()/(float)(RAND_MAX/2)-1;
-			pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
-			id++;
-			num_pilotes++;
-		}
 		col = c;
 		while (win_quincar(f, col) != ' ')
 		{
+			
 			win_escricar(f, col, ' ', NO_INV);
+			
 			col++;
 		}
 		col = c - 1;
 		while (win_quincar(f, col) != ' ')
 		{
+			
 			win_escricar(f, col, ' ', NO_INV);
+			
 			col--;
 		}
 		nblocs--;
+
+		if (quin == BLKCHAR)
+		{
+			
+			pos_f[id] = f;
+			pos_c[id] = c;
+			f_pil[id] = f;
+			c_pil[id] = c;
+			vel_f[id] = (float)rand()/(float)(RAND_MAX/2)-1;
+			vel_c[id] = (float)rand()/(float)(RAND_MAX/2)-1;
+			pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
+			id++;
+			num_pilotes++;
+			
+		}
 	}
 }
 
@@ -383,8 +394,8 @@ corresponent   (identificador   ‘1’   per   la   primera,   ‘2’   per   
 void * mou_pilota(void * index)
 {
 	int f_h, c_h;
+	int fi3 = 0;
 	char rh, rv, rd, no;
-	int fora = 0;
 	int in = (intptr_t)index;
 	do{									/* Bucle pelota */
 		f_h = pos_f[in] + vel_f[in];				/* posicio hipotetica de la pilota (entera) */
@@ -395,7 +406,9 @@ void * mou_pilota(void * index)
 		/* si posicio hipotetica no coincideix amb la posicio actual */
 			if (f_h != f_pil[in]) 					/* provar rebot vertical */
 			{
+				
 				rv = win_quincar(f_h, c_pil[in]);			/* veure si hi ha algun obstacle */
+				
 				if (rv != ' ') 					/* si hi ha alguna cosa */
 				{
 					comprovar_bloc(f_h, c_pil[in]);
@@ -411,7 +424,9 @@ void * mou_pilota(void * index)
 			}
 
 			if (c_h != c_pil[in]) {	/* provar rebot horitzontal */
+				
 				rh = win_quincar(f_pil[in], c_h);	/* veure si hi ha algun obstacle */
+				
 
 				if (rh != ' ') {	/* si hi ha algun obstacle */
 					comprovar_bloc(f_pil[in], c_h);
@@ -422,7 +437,9 @@ void * mou_pilota(void * index)
 			}
 
 			if ((f_h != f_pil[in]) && (c_h != c_pil[in])) {	/* provar rebot diagonal */
+				
 				rd = win_quincar(f_h, c_h);
+				
 				if (rd != ' ') {	/* si hi ha obstacle */
 					comprovar_bloc(f_h, c_h);
 					/* TODO?: tractar la col.lisio amb la paleta */
@@ -434,22 +451,32 @@ void * mou_pilota(void * index)
 			}
 
 			/* mostrar la pilota a la nova posició */
+			
 			no = win_quincar(f_h, c_h);
-
+			
 			if (no==' ')
 			{	/* verificar posicio definitiva *//* si no hi ha obstacle */
+				
 				win_escricar(f_pil[in], c_pil[in], ' ', NO_INV);	/* esborra pilota */
+				
 				pos_f[in] += vel_f[in];
 				pos_c[in] += vel_c[in];
 				f_pil[in] = f_h;
 				c_pil[in] = c_h;	/* actualitza posicio actual */
-
+				
 				if (f_pil[in] != n_fil - 1)	/* si no surt del taulell, */
 				{
+					
 					win_escricar(f_pil[in], c_pil[in], 48+in, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+index*/
+					
 				}
 				else
+				{
+					
 					num_pilotes--;
+					
+					fi3 = 1;
+				}
 			}
 		}
 		else
@@ -457,9 +484,12 @@ void * mou_pilota(void * index)
 			pos_f[in] += vel_f[in];
 			pos_c[in] += vel_c[in];
 		}
+		
 		fi2 = (nblocs==0 || num_pilotes==0);
+		
 		win_retard(retard);
-	} while(!fi1 && !fi2);
+
+	} while(!fi1 && !fi2 && !fi3);
 	vel_f[in]=0.0;
 	vel_c[in]=0.0;
 	return ((void *) index);
@@ -473,25 +503,38 @@ void * mou_paleta(void * nul)
 	int tecla, result;
 	do{												/* Bucle paleta */
 		result = 0;
+
 		tecla = win_gettec();
+		
 
 		if (tecla != 0) {
 			if ((tecla == TEC_DRETA) && ((c_pal + MIDA_PALETA) < n_col - 1))
 			{
+					
 					win_escricar(f_pal, c_pal, ' ', NO_INV);			/* esborra primer bloc */
+
 					c_pal++;							/* actualitza posicio */
+
 					win_escricar(f_pal, c_pal + MIDA_PALETA - 1, '0', INVERS);	/*esc. ultim bloc */
+					
 			}
 			if ((tecla == TEC_ESQUER) && (c_pal > 1)) {
+					
 					win_escricar(f_pal, c_pal + MIDA_PALETA - 1, ' ', NO_INV);	/*esborra ultim bloc */
 					c_pal--;							/* actualitza posicio */
+
 					win_escricar(f_pal, c_pal, '0', INVERS);			/* escriure primer bloc */
+					
 			}
 			if (tecla == TEC_RETURN)
 				result = 1;							/* final per pulsacio RETURN */
+			
 			dirPaleta = tecla;							/* per a afectar al moviment de les pilotes*/
+			
 		}
+		
 		fi1 = result;
+		
 		win_retard(5);
 	} while(!fi1 && !fi2);
 
@@ -553,16 +596,21 @@ int main(int n_args, char *ll_args[])
 		segons = ((((float) t_actual - (float) inici_temps)/CLOCKS_PER_SEC)*100)-60 * minuts;
 		if (segons >= 60)
 			minuts ++;
+		
 		memset(tiempo, 0, sizeof tiempo);
 		sprintf(tiempo, "Tiempo: %02d:%02d", minuts, segons);
 		win_escristr(tiempo);
-		win_retard(retard);		/* retard del joc */
+		
+		win_retard(100);		/* retard del joc */
 	} while (!fi1 && !fi2);
 
 	t_actual = clock();
 	segons = ((((float) t_actual - (float) inici_temps)/CLOCKS_PER_SEC)*100)-60 * minuts;
 	if (segons >= 60)
-		minuts ++;
+	{
+		segons = 0;
+		minuts++;
+	}	
 	memset(tiempo, 0, sizeof tiempo);
 
 

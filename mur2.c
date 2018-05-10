@@ -325,7 +325,9 @@ void control_impacte(void)
 				}
 			}
 		}
+		pthread_mutex_lock(&mutex);
 		dirPaleta=0;							/* reset perque ja hem aplicat l'efecte */
+		pthread_mutex_unlock(&mutex);
 	}
 }
 
@@ -381,8 +383,11 @@ void comprovar_bloc(int f, int c)
 			//pthread_mutex_lock(&mutex);
 			id++;
 			pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
+
 			pos_f[id] = f;
 			pos_c[id] = c;
+			f_pil[id] = f;
+			c_pil[id] = c;
 			vel_f[id] = (float)rand()/(float)(RAND_MAX/2)-1;
 			vel_c[id] = (float)rand()/(float)(RAND_MAX/2)-1;
 			num_pilotes++;
