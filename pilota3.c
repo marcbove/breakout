@@ -33,7 +33,7 @@ int *c_pal, *f_pal, *nblocs, *num_pilotes, *dirPaleta, retard, ind, c_pil, f_pil
 int id_mem_tauler, n_fil, n_col;
 int n_p, n_b;
 float vel_f, vel_c, pos_f, pos_c;
-int dir_p, c_p, f_p;
+int dir_p, c_p, f_p, *fi1, fi_1;
 
 
 /*Si hi ha una col.lisió pilota-bloc i esborra el bloc */
@@ -72,7 +72,8 @@ void comprovar_bloc(int f, int c)
 			char f_pil_str[SIZE_ARRAY], c_pil_str[SIZE_ARRAY];
 			char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY];
 			char nblocs_str[SIZE_ARRAY], npils_str[SIZE_ARRAY], retard_str[SIZE_ARRAY];
-			char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY];
+			char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY], fi_1[SIZE_ARRAY];
+			
 			tpid[num_fills] = fork();
 			//pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
 			if (tpid[num_fills] == 0)   /* Es tracta del proces fill */
@@ -93,10 +94,11 @@ void comprovar_bloc(int f, int c)
 			    sprintf (c_pal_str, "%d", c_p);
 			    sprintf (f_pal_str, "%d", f_p);
 			    sprintf (dirPaleta_str, "%d", dir_p);
+			    sprintf (fi1_str, "%d", fi_1);
 	
 				execlp("./pilota3", "pilota3", id_str, id_mem_tauler_str, fil_str,
 					col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
-					c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, dirPaleta_str, (char *)0);
+					c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, dirPaleta_str, fi1_str, (char *)0);
 		        fprintf(stderr, "Error: No puc executar el proces fill \'pilota3\' \n");
 		        exit(1);  /* Retornem error */
 			}
@@ -204,23 +206,17 @@ int main(int n_args, char *ll_args[])
 	c_p = atoi(ll_args[14]);
 	f_p = atoi(ll_args[15]);
 	dir_p = atoi(ll_args[16]);
+	fi_1 = atoi(ll_args[17]);
 	
-	//printf("VA direccion mem %d \n", id_mem_tauler);
     void * addr_tauler = map_mem(id_mem_tauler);
     win_set(addr_tauler, n_fil, n_col);
-    //printf("VA direccion mem %d \n", id_mem_tauler);
-	printf("N_P: %d\n", n_p);
+   
 	num_pilotes = map_mem(n_p);
-	//printf("VA pelotas %d \n", n_p);
-	printf("n_b: %d\n", n_b);
 	nblocs = map_mem(n_b);
-	//printf("VA nblocs %d \n", n_b);
-	printf("C_P: %d\n", c_p);
 	c_pal = map_mem(c_p);
-	printf("F_P: %d\n", f_p);
 	f_pal = map_mem(f_p);
-	printf("DIR_P: %d\n", dir_p);
 	dirPaleta = map_mem(dir_p);
+	fi1 = map_mem(fi_1);
 
 	int f_h, c_h;
 	char rh, rv, rd, no;
@@ -328,9 +324,9 @@ int main(int n_args, char *ll_args[])
 		//pthread_mutex_lock(&mutex);
 		fi2 = ((*nblocs) == 0 || (*num_pilotes) == 0);
 		//pthread_mutex_unlock(&mutex);
-		win_retard(10);
+		win_retard(retard);
 
-	} while(!fi3 && !fi2); /* fer bucle fins que la pilota surti de la porteria i llavors acabar el proces????? */
+	} while(!fi3 && !fi2 && !*(fi1)); /* fer bucle fins que la pilota surti de la porteria i llavors acabar el proces????? */
 	int i;
 	int stat;
 	for (i=0; i <= num_fills; i++){

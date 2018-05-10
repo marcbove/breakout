@@ -123,7 +123,7 @@ float vel_f, vel_c;		/* velocitat de la pilota, en valor real */
 int *nblocs, n_b;
 int *dirPaleta, dir_p;
 int retard;			/* valor del retard de moviment, en mil.lisegons */
-int fi1, fi2;			/* valor de condicions finals */
+int *fi1, fi_1, fi2;			/* valor de condicions finals */
 char strin[LONGMISS];		/* variable per a generar missatges de text */
 int id_mem_tauler, *addr_tauler;
 
@@ -337,11 +337,11 @@ void * mou_paleta(void * nul)
 			//pthread_mutex_unlock(&mutex);
 		}
 		//pthread_mutex_lock(&mutex);
-		fi1 = result;
+		*fi1 = result;
 		fi2 = ((*nblocs==0) || (*num_pilotes==0));
 		//pthread_mutex_unlock(&mutex);
 		win_retard(5);
-	} while(!fi1 && !fi2);
+	} while(!(*fi1) && !fi2);
 
 	return ((void *) 0);
 }
@@ -371,6 +371,11 @@ f_pal = map_mem(f_p);/* obtenir adreça mem. compartida */
 dir_p = ini_mem(sizeof(int));/* crear zona mem. compartida */
 dirPaleta = map_mem(dir_p);/* obtenir adreça mem. compartida */
 *dirPaleta = 0;/* inicialitza variable compartida */
+
+/* inicialitzacio variable compartida dirPaleta*/
+fi_1 = ini_mem(sizeof(int));/* crear zona mem. compartida */
+fi1 = map_mem(fi_1);/* obtenir adreça mem. compartida */
+*fi1 = 0;/* inicialitza variable compartida */
 	int i;
 	FILE *fit_conf;
 
@@ -420,15 +425,15 @@ dirPaleta = map_mem(dir_p);/* obtenir adreça mem. compartida */
 	char f_pil_str[SIZE_ARRAY], c_pil_str[SIZE_ARRAY];
 	char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY];
 	char nblocs_str[SIZE_ARRAY], npils_str[SIZE_ARRAY], retard_str[SIZE_ARRAY];
-	char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY];
+	char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY], fi1_str[SIZE_ARRAY];
 
 	pthread_create(&tid[0],NULL, &mou_paleta, (void *) NULL);
 	//pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
-	tpid[id] = fork();
+	tpid[0] = fork();
 
-	if (tpid[id] == (pid_t)0)   /* Es tracta del proces fill */
+	if (tpid[0] == (pid_t)0)   /* Es tracta del proces fill */
   	{
-  		sprintf (id_str, "%d", (int) id);
+  		sprintf (id_str, "%d", 0);
       	sprintf (id_mem_tauler_str, "%d", id_mem_tauler);
       	sprintf (fil_str, "%d", n_fil);
       	sprintf (col_str, "%d", n_col);
@@ -444,10 +449,11 @@ dirPaleta = map_mem(dir_p);/* obtenir adreça mem. compartida */
       	sprintf (c_pal_str, "%d", c_p);
       	sprintf (f_pal_str, "%d", f_p);
       	sprintf (dirPaleta_str, "%d", dir_p);
+      	sprintf (fi1_str, "%d", fi_1);
 
 		execlp("./pilota3", "pilota3", id_str, id_mem_tauler_str, fil_str,
 			col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
-			c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, dirPaleta_str, (char *)0);
+			c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, dirPaleta_str, fi1_str, (char *)0);
       	fprintf(stderr, "Error: No puc executar el proces fill \'pilota3\' \n");
       	exit(1);  /* Retornem error */
 	}
@@ -476,12 +482,13 @@ dirPaleta = map_mem(dir_p);/* obtenir adreça mem. compartida */
 		win_update();
 		win_retard(100);		/* retard del joc */
 
-	} while (!fi1 && !((*nblocs) == 0 || (*num_pilotes) == 0));
+	} while (!(*fi1) && !((*nblocs) == 0 || (*num_pilotes) == 0));
 
 	int stat;
-	for (i=0; i < id; i++){
-		waitpid(tpid[i], &stat, 0);
-	}
+	win_update();
+	pthread_join(tid[0], 0);
+	waitpid(tpid[0], &stat, 0);
+	
 
 	if ( *nblocs == 0)
 	{
