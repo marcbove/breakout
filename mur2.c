@@ -354,44 +354,44 @@ void * mou_pilota(void * index);
 void comprovar_bloc(int f, int c)
 {
 	int col;
-	pthread_mutex_lock(&mutex);
+	//pthread_mutex_lock(&mutex);
 	char quin = win_quincar(f, c);
-	pthread_mutex_unlock(&mutex);
+	//pthread_mutex_unlock(&mutex);
 
 	if (quin == BLKCHAR || quin == FRNTCHAR)
 	{
 		col = c;
 		while (win_quincar(f, col) != ' ')
 		{
-			pthread_mutex_lock(&mutex);
+			//pthread_mutex_lock(&mutex);
 			win_escricar(f, col, ' ', NO_INV);
-			pthread_mutex_unlock(&mutex);
+			//pthread_mutex_unlock(&mutex);
 			col++;
 		}
 		col = c - 1;
 		while (win_quincar(f, col) != ' ')
 		{
-			pthread_mutex_lock(&mutex);
+			//pthread_mutex_lock(&mutex);
 			win_escricar(f, col, ' ', NO_INV);
-			pthread_mutex_unlock(&mutex);
+			//pthread_mutex_unlock(&mutex);
 			col--;
 		}
 		nblocs--;
 
 		if (quin == BLKCHAR)
 		{
-			
+			//pthread_mutex_lock(&mutex);
+			id++;
+			pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
+
 			pos_f[id] = f;
 			pos_c[id] = c;
 			f_pil[id] = f;
 			c_pil[id] = c;
 			vel_f[id] = (float)rand()/(float)(RAND_MAX/2)-1;
 			vel_c[id] = (float)rand()/(float)(RAND_MAX/2)-1;
-			pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
-			pthread_mutex_lock(&mutex);
-			id++;
 			num_pilotes++;
-			pthread_mutex_unlock(&mutex);
+			//pthread_mutex_unlock(&mutex);
 		}
 	}
 }
@@ -419,7 +419,9 @@ void * mou_pilota(void * index)
 				pthread_mutex_unlock(&mutex);
 				if (rv != ' ') 					/* si hi ha alguna cosa */
 				{
+					pthread_mutex_lock(&mutex);
 					comprovar_bloc(f_h, c_pil[in]);
+					pthread_mutex_unlock(&mutex);
 					if (rv == '0')				/* col.lisió amb la paleta? */
 					{
 						/* XXX: tria la funció que vulgis o implementa'n una millor */
@@ -431,13 +433,16 @@ void * mou_pilota(void * index)
 				}
 			}
 
-			if (c_h != c_pil[in]) {	/* provar rebot horitzontal */
+			if (c_h != c_pil[in]) /* provar rebot horitzontal */
+			{	
 				pthread_mutex_lock(&mutex);
 				rh = win_quincar(f_pil[in], c_h);	/* veure si hi ha algun obstacle */
 				pthread_mutex_unlock(&mutex);
 
 				if (rh != ' ') {	/* si hi ha algun obstacle */
+					pthread_mutex_lock(&mutex);
 					comprovar_bloc(f_pil[in], c_h);
+					pthread_mutex_unlock(&mutex);
 					/* TODO?: tractar la col.lisio lateral amb la paleta */
 					vel_c[in] = -vel_c[in];	/* canvia sentit vel. horitzontal */
 					c_h = pos_c[in] + vel_c[in];	/* actualitza posicio hipotetica */
@@ -449,7 +454,9 @@ void * mou_pilota(void * index)
 				rd = win_quincar(f_h, c_h);
 				pthread_mutex_unlock(&mutex);
 				if (rd != ' ') {	/* si hi ha obstacle */
+					pthread_mutex_lock(&mutex);
 					comprovar_bloc(f_h, c_h);
+					pthread_mutex_unlock(&mutex);
 					/* TODO?: tractar la col.lisio amb la paleta */
 					vel_f[in] = -vel_f[in];
 					vel_c[in]= -vel_c[in];	/* canvia sentit velocitats */
@@ -465,11 +472,7 @@ void * mou_pilota(void * index)
 			if (no==' ')
 			{	/* verificar posicio definitiva *//* si no hi ha obstacle */
 				pthread_mutex_lock(&mutex);
-				if (f_pil[in] == 0 && c_pil[in]==0){
-					win_escricar(f_pil[in], c_pil[in], 48+in, NO_INV);	/* esborra pilota */
-				}
-				else
-					win_escricar(f_pil[in], c_pil[in], ' ', NO_INV);	/* esborra pilota */
+				win_escricar(f_pil[in], c_pil[in], ' ', INVERS);	/* esborra pilota */
 				pthread_mutex_unlock(&mutex);
 				pos_f[in] += vel_f[in];
 				pos_c[in] += vel_c[in];
@@ -480,15 +483,16 @@ void * mou_pilota(void * index)
 				{
 					//pthread_mutex_lock(&mutex);
 					win_escricar(f_pil[in], c_pil[in], 48+in, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+index*/
-					pthread_mutex_unlock(&mutex);
+					//pthread_mutex_unlock(&mutex);
 				}
 				else
 				{
 					//pthread_mutex_lock(&mutex);
 					num_pilotes--;
-					pthread_mutex_unlock(&mutex);
+					//pthread_mutex_unlock(&mutex);
 					fi3 = 1;
 				}
+				pthread_mutex_unlock(&mutex);
 			}
 		}
 		else
@@ -594,7 +598,6 @@ int main(int n_args, char *ll_args[])
 		exit(4);	/* aborta si hi ha algun problema amb taulell */
 
 	pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
-	id++;
 
 	pthread_create(&tid[0],NULL, &mou_paleta, (void *) NULL);
 
@@ -616,14 +619,14 @@ int main(int n_args, char *ll_args[])
 		win_retard(100);		/* retard del joc */
 	} while (!fi1 && !fi2);
 
-	t_actual = clock();
-	segons = ((((float) t_actual - (float) inici_temps)/CLOCKS_PER_SEC)*100)-60 * minuts;
-	if (segons >= 60)
-	{
-		segons = 0;
-		minuts++;
-	}	
-	memset(tiempo, 0, sizeof tiempo);
+	//t_actual = clock();
+	//segons = ((((float) t_actual - (float) inici_temps)/CLOCKS_PER_SEC)*100)-60 * minuts;
+	//if (segons >= 60)
+	//{
+	///	segons = 0;
+	//	minuts++;
+	//}	
+	//memset(tiempo, 0, sizeof tiempo);
 
 
 	if (nblocs == 0)
