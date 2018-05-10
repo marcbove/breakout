@@ -186,9 +186,9 @@ int main(int n_args, char *ll_args[])
 //void * mou_pilota(void * ind)
 {
 	num_fills = 0;
-	int fi2 = 0, fi3 = 0;
+	int fi2 = 0, fi3 = 0, id;
 	/* Parsing arguments */
-	ind = (intptr_t)atoi(ll_args[1]);
+	ind = atoi(ll_args[1]);
 	id_mem_tauler = atoi(ll_args[2]);
 	n_fil = atoi(ll_args[3]);
 	n_col = atoi(ll_args[4]);
@@ -225,7 +225,7 @@ int main(int n_args, char *ll_args[])
 	int f_h, c_h;
 	char rh, rv, rd, no;
 	//int in = (intptr_t)ind;
-
+	id=*num_pilotes;
 	do									/* Bucle pelota */
 	{
 		f_h = pos_f + vel_f;				/* posicio hipotetica de la pilota (entera) */
@@ -307,7 +307,7 @@ int main(int n_args, char *ll_args[])
 				if (f_pil != n_fil - 1)	/* si no surt del taulell, */
 				{
 					//pthread_mutex_lock(&mutex);
-					win_escricar(f_pil, c_pil, 49+ind, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+ind*/
+					win_escricar(f_pil, c_pil, 48+id, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+ind*/
 					//pthread_mutex_unlock(&mutex);
 				}
 				else
