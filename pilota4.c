@@ -5,6 +5,7 @@
 #include <string.h>
 #include <pthread.h>		/* incloure threads */
 #include <unistd.h>	/* fork */
+#include <time.h>
 #include "winsuport2.h"		/* incloure definicions de funcions propies */
 #include "memoria.h"
 #include "semafor.h"
@@ -35,10 +36,14 @@ int n_p, n_b;
 float vel_f, vel_c, pos_f, pos_c;
 int dir_p, c_p, f_p, *fi1, fi_1;
 int id_sem, id_bustia;
+int temp = 0;
+clock_t start_time = 0, end_time = 0;
+int a = 1;
+
 struct mens{
 		float vel_c_n;
 		float vel_f_n;
-	}  mensaje;
+}  mensaje;
 
 /*Si hi ha una col.lisió pilota-bloc i esborra el bloc */
 void comprovar_bloc(int f, int c)
@@ -49,7 +54,12 @@ void comprovar_bloc(int f, int c)
 	char quin = win_quincar(f, c);
 	//pthread_mutex_unlock(&mutex);
 	//signalS(id_sem);
-
+	if (quin == WLLCHAR && temp == 1 &&a==1)
+	{
+		win_escricar(f, c, ' ', NO_INV);
+		a++;
+	}
+	
 	if (quin == BLKCHAR || quin == FRNTCHAR)
 	{
 		col = c;
@@ -72,7 +82,14 @@ void comprovar_bloc(int f, int c)
 			//signalS(id_sem);
 			col--;
 		}
-		
+
+		if (quin == FRNTCHAR)
+		{
+			temp = 1;
+			start_time = clock();
+			end_time = 5 * CLOCKS_PER_SEC + start_time;
+			fprintf(stderr, "INICI TIMER, %ld \t %ld \n", start_time, end_time);			
+		}
 
 		if (quin == BLKCHAR)
 		{
@@ -116,7 +133,7 @@ void comprovar_bloc(int f, int c)
 			}
 		    else if (tpid[num_fills] <  0 )     /* ERROR*/
 		    {
-		    	fprintf(stderr, "Hi ha hagut un error en la creacio del proces");
+		    	fprintf(stderr, "Hi ha hagut un error en la creacio del proces\n");
 		    }
 		   	//waitS(id_sem);
 			(*num_pilotes)++;
@@ -205,7 +222,7 @@ int main(int n_args, char *ll_args[])
 //void * mou_pilota(void * ind)
 {
 	
-	struct mens mensaje;
+	//struct mens mensaje;
 	num_fills = 0;
 	int fi2 = 0, fi3 = 0, id;
 	/* Parsing arguments */
@@ -240,16 +257,19 @@ int main(int n_args, char *ll_args[])
 	fi1 = map_mem(fi_1);
 
 	int f_h, c_h;
+	float vel_f_n;
 	char rh, rv, rd, no;
 	//int in = (intptr_t)ind;
 	id=*num_pilotes;
 	do									/* Bucle pelota */
 	{
-		if(sem_value(id_sem)>1){
+		if(sem_value(id_sem)>1)
+		{
 			waitS(id_sem);
-			receiveM(id_bustia, &mensaje);
-			vel_c=mensaje.vel_c_n;
-			vel_f=0;
+			receiveM(id_bustia, &vel_f_n);
+			//receiveM(id_bustia, &mensaje);
+			//vel_c=0;
+			vel_f = vel_f_n;
 		}
 		while(sem_value(id_sem)>1);
 		f_h = pos_f + vel_f;				/* posicio hipotetica de la pilota (entera) */
@@ -366,18 +386,26 @@ int main(int n_args, char *ll_args[])
 		fi2 = ((*nblocs) == 0 || (*num_pilotes) == 0);
 		//pthread_mutex_unlock(&mutex);
 		signalS(id_sem);
+    	if(clock() >= end_time)
+    	{
+			temp = 0;
+    		fprintf(stderr, "FINALITZA TIMER\n");
+    	}
+
 		win_retard(retard);
 
 	} while(!fi3 && !fi2 && !*(fi1)); /* fer bucle fins que la pilota surti de la porteria i llavors acabar el proces????? */
 	int i;
 	int stat;
-	 
-	mensaje.vel_f_n = vel_f;
-	mensaje.vel_c_n = vel_c;
+	vel_f_n = vel_f;
+	//mensaje.vel_f_n = vel_f;
+	//mensaje.vel_c_n = vel_c;
 	for (i=0; i<=*num_pilotes-1; i++){
 		signalS(id_sem);
-		sendM(id_bustia, &mensaje, 128);
+		//sendM(id_bustia, &mensaje, sizeof mensaje);
+		sendM(id_bustia, &vel_f_n, sizeof vel_f_n);
 	}
+
 	for (i=0; i <= num_fills; i++){
 		waitpid(tpid[i], &stat, 0);
 	}

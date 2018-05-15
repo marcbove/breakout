@@ -26,6 +26,7 @@
 #include <string.h>
 #include <pthread.h>		/* incloure threads */
 #include <unistd.h>	/* fork */
+#include <time.h>
 #include "winsuport2.h"		/* incloure definicions de funcions propies */
 #include "memoria.h"
 #include "semafor.h"
@@ -437,10 +438,12 @@ fi1 = map_mem(fi_1);/* obtenir adreça mem. compartida */
 	char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY];
 	char nblocs_str[SIZE_ARRAY], npils_str[SIZE_ARRAY], retard_str[SIZE_ARRAY];
 	char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY], fi1_str[SIZE_ARRAY];
-	char id_sem_str[SIZE_ARRAY], id_bustia_str[SIZE_ARRAY], id_sem_pi_str;
+	char id_sem_str[SIZE_ARRAY], id_bustia_str[SIZE_ARRAY];
 	
 		
 	id_sem = ini_sem(1);		/* creacio semafor */
+	//int asd = sem_value(id_sem);
+	//fprintf(stderr, "%d\n", asd);
 	id_bustia = ini_mis();		/* creacio bustia IPC */
 	
 	
@@ -529,6 +532,8 @@ fi1 = map_mem(fi_1);/* obtenir adreça mem. compartida */
 	elim_mem(c_p);
 	elim_mem(f_p);
 	elim_mem(dir_p);
+	elim_sem(id_sem);
+	elim_mis(id_bustia);
 
 	return (0);		/* retorna sense errors d'execucio */
 }
