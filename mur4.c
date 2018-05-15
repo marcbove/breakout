@@ -126,7 +126,7 @@ int retard;			/* valor del retard de moviment, en mil.lisegons */
 int *fi1, fi_1, fi2;			/* valor de condicions finals */
 char strin[LONGMISS];		/* variable per a generar missatges de text */
 int id_mem_tauler, *addr_tauler;
-int id_sem, id_bustia;
+int id_sem, id_bustia, id_sem_pilotes;
 
 
 
@@ -437,11 +437,12 @@ fi1 = map_mem(fi_1);/* obtenir adreça mem. compartida */
 	char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY];
 	char nblocs_str[SIZE_ARRAY], npils_str[SIZE_ARRAY], retard_str[SIZE_ARRAY];
 	char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY], fi1_str[SIZE_ARRAY];
-	char id_sem_str[SIZE_ARRAY], id_bustia_str[SIZE_ARRAY];
+	char id_sem_str[SIZE_ARRAY], id_bustia_str[SIZE_ARRAY], id_sem_pi_str;
 	
 		
 	id_sem = ini_sem(1);		/* creacio semafor */
 	id_bustia = ini_mis();		/* creacio bustia IPC */
+	
 	
 	pthread_create(&tid[0],NULL, &mou_paleta, (void *) NULL);
 	//pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);

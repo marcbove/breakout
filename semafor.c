@@ -107,3 +107,10 @@ int r;
 			reservats.*/
  assert (r != -1);
 }
+
+int sem_value(int id_sem)
+{
+struct sembuf a;
+
+return semctl(id_sem,0,GETVAL,a);
+}

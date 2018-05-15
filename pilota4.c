@@ -35,6 +35,10 @@ int n_p, n_b;
 float vel_f, vel_c, pos_f, pos_c;
 int dir_p, c_p, f_p, *fi1, fi_1;
 int id_sem, id_bustia;
+struct mens{
+		float vel_c_n;
+		float vel_f_n;
+	}  mensaje;
 
 /*Si hi ha una col.lisió pilota-bloc i esborra el bloc */
 void comprovar_bloc(int f, int c)
@@ -200,6 +204,8 @@ corresponent   (identificador   ‘1’   per   la   primera,   ‘2’   per   
 int main(int n_args, char *ll_args[])
 //void * mou_pilota(void * ind)
 {
+	
+	struct mens mensaje;
 	num_fills = 0;
 	int fi2 = 0, fi3 = 0, id;
 	/* Parsing arguments */
@@ -239,6 +245,13 @@ int main(int n_args, char *ll_args[])
 	id=*num_pilotes;
 	do									/* Bucle pelota */
 	{
+		if(sem_value(id_sem)>1){
+			waitS(id_sem);
+			receiveM(id_bustia, &mensaje);
+			vel_c=mensaje.vel_c_n;
+			vel_f=0;
+		}
+		while(sem_value(id_sem)>1);
 		f_h = pos_f + vel_f;				/* posicio hipotetica de la pilota (entera) */
 		c_h = pos_c + vel_c;
 		rh = rv = rd = ' ';
@@ -358,6 +371,13 @@ int main(int n_args, char *ll_args[])
 	} while(!fi3 && !fi2 && !*(fi1)); /* fer bucle fins que la pilota surti de la porteria i llavors acabar el proces????? */
 	int i;
 	int stat;
+	 
+	mensaje.vel_f_n = vel_f;
+	mensaje.vel_c_n = vel_c;
+	for (i=0; i<=*num_pilotes-1; i++){
+		signalS(id_sem);
+		sendM(id_bustia, &mensaje, 128);
+	}
 	for (i=0; i <= num_fills; i++){
 		waitpid(tpid[i], &stat, 0);
 	}
