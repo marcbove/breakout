@@ -128,7 +128,8 @@ int *fi1, fi_1, fi2;			/* valor de condicions finals */
 char strin[LONGMISS];		/* variable per a generar missatges de text */
 int id_mem_tauler, *addr_tauler;
 int id_sem, id_bustia, id_sem_pilotes;
-
+int *temp, temporitzador, start_t;
+clock_t *start_time;
 
 
 /* funcio per carregar i interpretar el fitxer de configuracio de la partida */
@@ -310,6 +311,7 @@ void * mou_paleta(void * nul)
 	int tecla, result;
 	do{												/* Bucle paleta */
 		result = 0;
+		while(sem_value(id_sem)>1);
 		waitS(id_sem);
 		//pthread_mutex_lock(&mutex);
 		tecla = win_gettec();
@@ -320,6 +322,7 @@ void * mou_paleta(void * nul)
 		if (tecla != 0) {
 			if ((tecla == TEC_DRETA) && ((*c_pal + MIDA_PALETA) < n_col - 1))
 			{
+					while(sem_value(id_sem)>1);
 					waitS(id_sem);
 					//pthread_mutex_lock(&mutex);
 					win_escricar( *f_pal, *c_pal, ' ', NO_INV);			/* esborra primer bloc */
@@ -329,6 +332,7 @@ void * mou_paleta(void * nul)
 					//pthread_mutex_unlock(&mutex);
 			}
 			if ((tecla == TEC_ESQUER) && (*c_pal > 1)) {
+					while(sem_value(id_sem)>1);
 					waitS(id_sem);
 					//pthread_mutex_lock(&mutex);
 					win_escricar(*f_pal, *c_pal + MIDA_PALETA - 1, ' ', NO_INV);	/*esborra ultim bloc */
@@ -340,12 +344,14 @@ void * mou_paleta(void * nul)
 			}
 			if (tecla == TEC_RETURN)
 				result = 1;							/* final per pulsacio RETURN */
+			while(sem_value(id_sem)>1);
 			waitS(id_sem);
 			//pthread_mutex_lock(&mutex);
 			*dirPaleta = tecla;							/* per a afectar al moviment de les pilotes*/
 			signalS(id_sem);
 			//pthread_mutex_unlock(&mutex);
 		}
+		while(sem_value(id_sem)>1);
 		waitS(id_sem);
 		//pthread_mutex_lock(&mutex);
 		*fi1 = result;
@@ -388,9 +394,20 @@ dirPaleta = map_mem(dir_p);/* obtenir adreça mem. compartida */
 fi_1 = ini_mem(sizeof(int));/* crear zona mem. compartida */
 fi1 = map_mem(fi_1);/* obtenir adreça mem. compartida */
 *fi1 = 0;/* inicialitza variable compartida */
-	int i;
-	FILE *fit_conf;
 
+temporitzador =ini_mem(sizeof(int));
+temp = map_mem(temporitzador);
+*temp = 0;
+
+start_t = ini_mem(sizeof(int));
+start_time = map_mem(start_t);
+*start_time=0;
+int i;
+FILE *fit_conf;
+clock_t end_time=0;
+int segons_temp=0;
+
+id_sem = ini_sem(1);		/* creacio semafor */
 	if ((n_args != 2) && (n_args != 3)) /* si numero d'arguments incorrecte */
 	{
 		i = 0;
@@ -438,10 +455,9 @@ fi1 = map_mem(fi_1);/* obtenir adreça mem. compartida */
 	char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY];
 	char nblocs_str[SIZE_ARRAY], npils_str[SIZE_ARRAY], retard_str[SIZE_ARRAY];
 	char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY], fi1_str[SIZE_ARRAY];
-	char id_sem_str[SIZE_ARRAY], id_bustia_str[SIZE_ARRAY];
+	char id_sem_str[SIZE_ARRAY], id_bustia_str[SIZE_ARRAY], temp_str[SIZE_ARRAY], start_str[SIZE_ARRAY];
 	
 		
-	id_sem = ini_sem(1);		/* creacio semafor */
 	//int asd = sem_value(id_sem);
 	//fprintf(stderr, "%d\n", asd);
 	id_bustia = ini_mis();		/* creacio bustia IPC */
@@ -472,10 +488,12 @@ fi1 = map_mem(fi_1);/* obtenir adreça mem. compartida */
       	sprintf (fi1_str, "%d", fi_1);
 		sprintf (id_sem_str, "%d", id_sem);
 		sprintf (id_bustia_str, "%d", id_bustia);
+		sprintf (temp_str, "%d", temporitzador);
+		sprintf (start_str, "%d", start_t);
 
 		execlp("./pilota4", "pilota4", id_str, id_mem_tauler_str, fil_str,
 			col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
-			c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, dirPaleta_str, fi1_str, id_sem_str, id_bustia_str, (char *)0);
+			c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, dirPaleta_str, fi1_str, id_sem_str, id_bustia_str, temp_str, start_str, (char *)0);
       	fprintf(stderr, "Error: No puc executar el proces fill \'pilota3\' \n");
       	exit(1);  /* Retornem error */
 	}
@@ -493,14 +511,34 @@ fi1 = map_mem(fi_1);/* obtenir adreça mem. compartida */
 	{
 		t_actual = clock();
 		segons = ((((float) t_actual - (float) inici_temps)/CLOCKS_PER_SEC)*100)-60 * minuts;
+
 		if (segons >= 60)
 			minuts ++;
 
 		//pthread_mutex_lock(&mutex);
+		while(sem_value(id_sem)>1);
 		waitS(id_sem);
-		memset(tiempo, 0, sizeof tiempo);
-		sprintf(tiempo, "Tiempo: %02d:%02d", minuts, segons);
-		win_escristr(tiempo);
+
+		if (*temp == 1)
+		{
+			end_time = clock();
+			segons_temp = ((((float) end_time - (float) (*start_time)  ) / CLOCKS_PER_SEC)*100) ;
+			//end_time = 5 * CLOCKS_PER_SEC + (*start_time);
+			memset(tiempo, 0, sizeof tiempo);
+			sprintf(tiempo, "Tiempo: %02d:%02d \t\t Temp: %02d", minuts, segons, segons_temp);
+			win_escristr(tiempo);
+		}
+	
+		else
+		{
+			memset(tiempo, 0, sizeof tiempo);
+			sprintf(tiempo, "Tiempo: %02d:%02d", minuts, segons);
+			win_escristr(tiempo);
+		}
+		if(end_time-(*start_time)>=(5*CLOCKS_PER_SEC))
+    	{
+			*temp = 0;
+    	}
 		//pthread_mutex_unlock(&mutex);
 		win_update();
 		signalS(id_sem);
@@ -525,15 +563,18 @@ fi1 = map_mem(fi_1);/* obtenir adreça mem. compartida */
 		mostra_final(tiempo);
 	}
 	
-	win_fi();		/* tanca les curses */
 	elim_mem(id_mem_tauler);
 	elim_mem(n_p);
 	elim_mem(n_b);
 	elim_mem(c_p);
 	elim_mem(f_p);
 	elim_mem(dir_p);
+	elim_mem(temporitzador);
+	elim_mem(start_t);
+	elim_mem(fi_1);
 	elim_sem(id_sem);
 	elim_mis(id_bustia);
+	win_fi();		/* tanca les curses */
 
 	return (0);		/* retorna sense errors d'execucio */
 }

@@ -36,9 +36,9 @@ int n_p, n_b;
 float vel_f, vel_c, pos_f, pos_c;
 int dir_p, c_p, f_p, *fi1, fi_1;
 int id_sem, id_bustia;
-int temp = 0;
-clock_t start_time = 0, end_time = 0;
-int a = 1;
+int *temp, temporitzador, start_t;
+clock_t *start_time;
+
 
 struct mens{
 		float vel_c_n;
@@ -54,10 +54,9 @@ void comprovar_bloc(int f, int c)
 	char quin = win_quincar(f, c);
 	//pthread_mutex_unlock(&mutex);
 	//signalS(id_sem);
-	if (quin == WLLCHAR && temp == 1 &&a==1)
+	if (quin == WLLCHAR && *temp == 1)
 	{
 		win_escricar(f, c, ' ', NO_INV);
-		a++;
 	}
 	
 	if (quin == BLKCHAR || quin == FRNTCHAR)
@@ -85,10 +84,9 @@ void comprovar_bloc(int f, int c)
 
 		if (quin == FRNTCHAR)
 		{
-			temp = 1;
-			start_time = clock();
-			end_time = 5 * CLOCKS_PER_SEC + start_time;
-			fprintf(stderr, "INICI TIMER, %ld \t %ld \n", start_time, end_time);			
+			*temp = 1;
+			*start_time = clock();
+			//fprintf(stderr, "INICI TIMER, %ld \t %ld \n", start_time, end_time);			
 		}
 
 		if (quin == BLKCHAR)
@@ -99,7 +97,7 @@ void comprovar_bloc(int f, int c)
 			char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY];
 			char nblocs_str[SIZE_ARRAY], npils_str[SIZE_ARRAY], retard_str[SIZE_ARRAY];
 			char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY], fi1_str[SIZE_ARRAY];
-			char id_sem_str[SIZE_ARRAY], id_bustia_str[SIZE_ARRAY];
+			char id_sem_str[SIZE_ARRAY], id_bustia_str[SIZE_ARRAY], temp_str[SIZE_ARRAY], start_str[SIZE_ARRAY];
 			
 			tpid[num_fills] = fork();
 			
@@ -124,10 +122,12 @@ void comprovar_bloc(int f, int c)
 			    sprintf (fi1_str, "%d", fi_1);
 			    sprintf (id_sem_str, "%d", id_sem);
 				sprintf (id_bustia_str, "%d", id_bustia);
+				sprintf (temp_str, "%d", temporitzador);
+				sprintf (start_str, "%d", start_t);
 	
 				execlp("./pilota4", "pilota4", id_str, id_mem_tauler_str, fil_str,
 					col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
-					c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, dirPaleta_str, fi1_str,  id_sem_str, id_bustia_str, (char *)0);
+					c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, dirPaleta_str, fi1_str,  id_sem_str, id_bustia_str, temp_str, start_str, (char *)0);
 		        fprintf(stderr, "Error: No puc executar el proces fill \'pilota4\' \n");
 		        exit(1);  /* Retornem error */
 			}
@@ -245,6 +245,8 @@ int main(int n_args, char *ll_args[])
 	fi_1 = atoi(ll_args[17]);
 	id_sem = atoi(ll_args[18]);
 	id_bustia = atoi(ll_args[19]);
+	temporitzador = atoi(ll_args[20]);
+	start_t = atoi(ll_args[21]);
 	
     void * addr_tauler = map_mem(id_mem_tauler);
     win_set(addr_tauler, n_fil, n_col);
@@ -255,6 +257,8 @@ int main(int n_args, char *ll_args[])
 	f_pal = map_mem(f_p);
 	dirPaleta = map_mem(dir_p);
 	fi1 = map_mem(fi_1);
+	temp = map_mem(temporitzador);
+	start_time = map_mem(start_t);
 
 	int f_h, c_h;
 	float vel_f_n;
@@ -269,7 +273,18 @@ int main(int n_args, char *ll_args[])
 			receiveM(id_bustia, &vel_f_n);
 			//receiveM(id_bustia, &mensaje);
 			//vel_c=0;
-			vel_f = vel_f_n;
+			if (vel_f_n > vel_f)
+			{
+				vel_f = vel_f_n * 1.25;
+				if (vel_f>1)
+					vel_f=1;
+				if (vel_f < -1)
+					vel_f=-1;
+
+			}
+
+			else if (vel_f_n < vel_f)
+				vel_f = vel_f_n;
 		}
 		while(sem_value(id_sem)>1);
 		f_h = pos_f + vel_f;				/* posicio hipotetica de la pilota (entera) */
@@ -386,11 +401,7 @@ int main(int n_args, char *ll_args[])
 		fi2 = ((*nblocs) == 0 || (*num_pilotes) == 0);
 		//pthread_mutex_unlock(&mutex);
 		signalS(id_sem);
-    	if(clock() >= end_time)
-    	{
-			temp = 0;
-    		fprintf(stderr, "FINALITZA TIMER\n");
-    	}
+    	
 
 		win_retard(retard);
 
