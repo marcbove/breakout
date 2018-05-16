@@ -522,7 +522,7 @@ id_sem = ini_sem(1);		/* creacio semafor */
 		if (*temp == 1)
 		{
 			end_time = clock();
-			segons_temp = ((((float) end_time - (float) (*start_time)  ) / CLOCKS_PER_SEC)*100) ;
+			segons_temp = 5-((((float) t_actual - (float) inici_temps -((float) *start_time)) / CLOCKS_PER_SEC)*100) ;
 			//end_time = 5 * CLOCKS_PER_SEC + (*start_time);
 			memset(tiempo, 0, sizeof tiempo);
 			sprintf(tiempo, "Tiempo: %02d:%02d \t\t Temp: %02d", minuts, segons, segons_temp);
@@ -535,10 +535,11 @@ id_sem = ini_sem(1);		/* creacio semafor */
 			sprintf(tiempo, "Tiempo: %02d:%02d", minuts, segons);
 			win_escristr(tiempo);
 		}
-		if(end_time-(*start_time)>=(5*CLOCKS_PER_SEC))
-    	{
+		if((5-((((float) t_actual - (float) inici_temps -((float) *start_time)) / CLOCKS_PER_SEC)*100))<=0)
+    		{
+			*start_time = 0;
 			*temp = 0;
-    	}
+    		}
 		//pthread_mutex_unlock(&mutex);
 		win_update();
 		signalS(id_sem);
