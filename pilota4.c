@@ -26,6 +26,7 @@
 #define BLKCHAR 'B'
 #define WLLCHAR '#'
 #define FRNTCHAR 'A'
+#define TEMPCHAR 'T'
 #define LONGMISS 65
 
 /* variables globals */
@@ -59,7 +60,7 @@ void comprovar_bloc(int f, int c)
 		win_escricar(f, c, ' ', NO_INV);
 	}
 	
-	if (quin == BLKCHAR || quin == FRNTCHAR)
+	if (quin == BLKCHAR || quin == FRNTCHAR || quin == TEMPCHAR)
 	{
 		col = c;
 		while (win_quincar(f, col) != ' ')
@@ -84,8 +85,14 @@ void comprovar_bloc(int f, int c)
 
 		if (quin == FRNTCHAR)
 		{
-			*temp = 1;
-			*start_time = clock();
+			(*temp) = 5;
+			//fprintf(stderr, "INICI TIMER, %ld \t %ld \n", start_time, end_time);			
+		}
+
+		if (quin == TEMPCHAR)
+		{
+			if ((*temp)!=0)
+				(*temp) = (*temp) +5;
 			//fprintf(stderr, "INICI TIMER, %ld \t %ld \n", start_time, end_time);			
 		}
 
@@ -376,9 +383,14 @@ int main(int n_args, char *ll_args[])
 				//pthread_mutex_lock(&mutex);
 				if (f_pil != n_fil - 1)	/* si no surt del taulell, */
 				{	
-					//pthread_mutex_lock(&mutex);
-					win_escricar(f_pil, c_pil, 48+id, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+ind*/
-					//pthread_mutex_unlock(&mutex);	
+					if ((*temp) == 0)
+					{
+						//pthread_mutex_lock(&mutex);
+						win_escricar(f_pil, c_pil, 48+id, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+ind*/
+						//pthread_mutex_unlock(&mutex);	
+					}
+					else 
+						win_escricar(f_pil, c_pil, 48+id, NO_INV);	/* imprimeix pilota inve*/
 				}
 				else
 				{

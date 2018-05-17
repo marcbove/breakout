@@ -47,6 +47,7 @@
 #define BLKCHAR 'B'
 #define WLLCHAR '#'
 #define FRNTCHAR 'A'
+#define TEMPCHAR 'T'
 #define LONGMISS 65
 			/* variables globals */
 
@@ -128,7 +129,7 @@ int *fi1, fi_1, fi2;			/* valor de condicions finals */
 char strin[LONGMISS];		/* variable per a generar missatges de text */
 int id_mem_tauler, *addr_tauler;
 int id_sem, id_bustia, id_sem_pilotes;
-int *temp, temporitzador, start_t;
+int *temp=0, temporitzador, start_t;
 clock_t *start_time;
 
 
@@ -262,7 +263,7 @@ int inicialitza_joc(void)
 	{
 		for (c = 0; c < BLKSIZE; c++)
 		{
-			win_escricar(3, offset + c, FRNTCHAR, INVERS);
+			win_escricar(3, offset + c, TEMPCHAR, INVERS);
 			nb++;
 			win_escricar(4, offset + c, BLKCHAR, NO_INV);
 			nb++;
@@ -304,6 +305,19 @@ void mostra_final(char *miss)
 	getchar();
 }
 
+void * temporitza(void * nul)
+{
+	do{
+		while((*temp)!=0)
+		{
+			sleep(1);
+			waitS(id_sem);
+			(*temp)--;
+			signalS(id_sem);
+		}
+	}while(!(*fi1) && !fi2);
+	return ((void *) 0);
+}
 /* funcio per moure la paleta segons la tecla premuda */
 /* retorna un boolea indicant si l'usuari vol acabar */
 void * mou_paleta(void * nul)
@@ -404,8 +418,7 @@ start_time = map_mem(start_t);
 *start_time=0;
 int i;
 FILE *fit_conf;
-clock_t end_time=0;
-int segons_temp=0;
+
 
 id_sem = ini_sem(1);		/* creacio semafor */
 	if ((n_args != 2) && (n_args != 3)) /* si numero d'arguments incorrecte */
@@ -464,6 +477,7 @@ id_sem = ini_sem(1);		/* creacio semafor */
 	
 	
 	pthread_create(&tid[0],NULL, &mou_paleta, (void *) NULL);
+	pthread_create(&tid[1],NULL, &temporitza, (void *) NULL);
 	//pthread_create(&tid[id],NULL, &mou_pilota , (intptr_t *) id);
 	tpid[0] = fork();
 
@@ -518,28 +532,16 @@ id_sem = ini_sem(1);		/* creacio semafor */
 		//pthread_mutex_lock(&mutex);
 		while(sem_value(id_sem)>1);
 		waitS(id_sem);
-
-		if (*temp == 1)
+		if ((*temp)>0)
 		{
-			end_time = clock();
-			segons_temp = 5-((((float) t_actual - (float) inici_temps -((float) *start_time)) / CLOCKS_PER_SEC)*100) ;
-			//end_time = 5 * CLOCKS_PER_SEC + (*start_time);
-			memset(tiempo, 0, sizeof tiempo);
-			sprintf(tiempo, "Tiempo: %02d:%02d \t\t Temp: %02d", minuts, segons, segons_temp);
-			win_escristr(tiempo);
+			sprintf(tiempo, "Tiempo: %02d:%02d\t\tTemp:%02d", minuts, segons, (*temp));
 		}
-	
+		//memset(tiempo, 0, sizeof tiempo);
 		else
-		{
-			memset(tiempo, 0, sizeof tiempo);
 			sprintf(tiempo, "Tiempo: %02d:%02d", minuts, segons);
-			win_escristr(tiempo);
-		}
-		if((5-((((float) t_actual - (float) inici_temps -((float) *start_time)) / CLOCKS_PER_SEC)*100))<=0)
-    		{
-			*start_time = 0;
-			*temp = 0;
-    		}
+
+		win_escristr(tiempo);
+		
 		//pthread_mutex_unlock(&mutex);
 		win_update();
 		signalS(id_sem);
@@ -550,6 +552,7 @@ id_sem = ini_sem(1);		/* creacio semafor */
 	int stat;
 	win_update();
 	pthread_join(tid[0], 0);
+	pthread_join(tid[1], 0);
 	waitpid(tpid[0], &stat, 0);
 	
 
