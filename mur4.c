@@ -129,7 +129,7 @@ int *fi1, fi_1, fi2;			/* valor de condicions finals */
 char strin[LONGMISS];		/* variable per a generar missatges de text */
 int id_mem_tauler, *addr_tauler;
 int id_sem, id_bustia, id_sem_pilotes;
-int *temp=0, temporitzador, start_t;
+int *temp=0, temporitzador, start_t, segons;
 clock_t *start_time;
 
 
@@ -308,13 +308,14 @@ void mostra_final(char *miss)
 void * temporitza(void * nul)
 {
 	do{
-		while((*temp)!=0)
+		sleep(1);
+		waitS(id_sem);
+		if((*temp)!=0)
 		{
-			sleep(1);
-			waitS(id_sem);
 			(*temp)--;
-			signalS(id_sem);
 		}
+		segons++;
+		signalS(id_sem);
 	}while(!(*fi1) && !fi2);
 	return ((void *) 0);
 }
@@ -474,7 +475,7 @@ id_sem = ini_sem(1);		/* creacio semafor */
 	//int asd = sem_value(id_sem);
 	//fprintf(stderr, "%d\n", asd);
 	id_bustia = ini_mis();		/* creacio bustia IPC */
-	
+	segons=0;
 	
 	pthread_create(&tid[0],NULL, &mou_paleta, (void *) NULL);
 	pthread_create(&tid[1],NULL, &temporitza, (void *) NULL);
@@ -516,18 +517,21 @@ id_sem = ini_sem(1);		/* creacio semafor */
     	fprintf(stderr, "Hi ha hagut un error en la creacio del proces");
   	}
 	
-	clock_t inici_temps = clock();		/* variable tipo tiempo para tiempo inicial */
-	clock_t t_actual = clock();		/* variable tipo tiempo para tiempo actual */
-	int segons = 0, minuts = 0;		/* variable segundos y minutos inicializados a 0 */
+	//clock_t inici_temps = clock();		/* variable tipo tiempo para tiempo inicial */
+	//clock_t t_actual = clock();		/* variable tipo tiempo para tiempo actual */
+	int minuts = 0;		/* variable segundos y minutos inicializados a 0 */
 	char tiempo[LONGMISS];			/* variable 'String' para tiempo del tamaño maximo que se puede imprimir por pantalla */
 
 	do
 	{
-		t_actual = clock();
-		segons = ((((float) t_actual - (float) inici_temps)/CLOCKS_PER_SEC)*100)-60 * minuts;
-
+		
 		if (segons >= 60)
+		{
+			waitS(id_sem);
 			minuts ++;
+			segons=0;
+			signalS(id_sem);
+		}
 
 		//pthread_mutex_lock(&mutex);
 		while(sem_value(id_sem)>1);

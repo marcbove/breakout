@@ -55,7 +55,7 @@ void comprovar_bloc(int f, int c)
 	char quin = win_quincar(f, c);
 	//pthread_mutex_unlock(&mutex);
 	//signalS(id_sem);
-	if (quin == WLLCHAR && *temp == 1)
+	if (quin == WLLCHAR && (*temp) !=0)
 	{
 		win_escricar(f, c, ' ', NO_INV);
 	}
