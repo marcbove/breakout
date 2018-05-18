@@ -41,7 +41,6 @@ int *temp, temporitzador, start_t;
 clock_t *start_time;
 int *id, id_pilota, identificador;
 
-
 struct mens{
 		float vel_c_n;
 		float vel_f_n;
@@ -51,11 +50,8 @@ struct mens{
 void comprovar_bloc(int f, int c)
 {
 	int col;
-	//waitS(id_sem);
-	//pthread_mutex_lock(&mutex);
 	char quin = win_quincar(f, c);
-	//pthread_mutex_unlock(&mutex);
-	//signalS(id_sem);
+
 	if (quin == WLLCHAR && (*temp) !=0)
 	{
 		win_escricar(f, c, ' ', NO_INV);
@@ -66,35 +62,23 @@ void comprovar_bloc(int f, int c)
 		col = c;
 		while (win_quincar(f, col) != ' ')
 		{
-			//waitS(id_sem);
-			//pthread_mutex_lock(&mutex);
 			win_escricar(f, col, ' ', NO_INV);
-			//pthread_mutex_unlock(&mutex);
-			//signalS(id_sem);
 			col++;
 		}
 		col = c - 1;
 		while (win_quincar(f, col) != ' ')
 		{
-			//waitS(id_sem);
-			//pthread_mutex_lock(&mutex);
 			win_escricar(f, col, ' ', NO_INV);
-			//pthread_mutex_unlock(&mutex);
-			//signalS(id_sem);
 			col--;
 		}
 
 		if (quin == FRNTCHAR)
-		{
-			(*temp) = 5;
-			//fprintf(stderr, "INICI TIMER, %ld \t %ld \n", start_time, end_time);			
-		}
+			(*temp) = 5;		
 
 		if (quin == TEMPCHAR)
 		{
 			if ((*temp)!=0)
-				(*temp) = (*temp) +5;
-			//fprintf(stderr, "INICI TIMER, %ld \t %ld \n", start_time, end_time);			
+				(*temp) = (*temp) + 5;		
 		}
 
 		if (quin == BLKCHAR)
@@ -107,39 +91,33 @@ void comprovar_bloc(int f, int c)
 			char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY], fi1_str[SIZE_ARRAY];
 			char id_sem_str[SIZE_ARRAY], id_bustia_str[SIZE_ARRAY], temp_str[SIZE_ARRAY], start_str[SIZE_ARRAY];
 			
-			//ind = (*id);
 			(*id)++;
-			//ind ++;
-			//fprintf(stderr, "\t\t%d\t\t%d\t\t%d\t\t%d\n", *id, *num_pilotes, identificador, ind);
-			
-			
 			tpid[num_fills] = fork();
 			
 			if (tpid[num_fills] == 0)   /* Es tracta del proces fill */
 			{
-				//ind++;
-				sprintf (id_str, "%d", (*id));
-			    sprintf (id_mem_tauler_str, "%d", id_mem_tauler);
-			    sprintf (fil_str, "%d", n_fil);
-			    sprintf (col_str, "%d", n_col);
-			    sprintf (vel_f_str, "%f", (float)rand()/(float)(RAND_MAX/2)-1);
-			    sprintf (vel_c_str, "%f", (float)rand()/(float)(RAND_MAX/2)-1);
-			    sprintf (pos_f_str, "%d", f);
-			    sprintf (pos_c_str, "%d", c);
-			    sprintf (f_pil_str, "%d", f);
-			    sprintf (c_pil_str, "%d", c);
-			    sprintf (nblocs_str, "%d", n_b);
-			    sprintf (npils_str, "%d", n_p);
-			    sprintf (retard_str, "%d", retard);
-			    sprintf (c_pal_str, "%d", c_p);
-			    sprintf (f_pal_str, "%d", f_p);
-			    sprintf (dirPaleta_str, "%d", dir_p);
-			    sprintf (fi1_str, "%d", fi_1);
-			    sprintf (id_sem_str, "%d", id_sem);
-				sprintf (id_bustia_str, "%d", id_bustia);
-				sprintf (temp_str, "%d", temporitzador);
-				sprintf (start_str, "%d", start_t);
-				sprintf (id_pilota_str, "%d", id_pilota);
+				sprintf(id_str, "%d", (*id));
+			    sprintf(id_mem_tauler_str, "%d", id_mem_tauler);
+			    sprintf(fil_str, "%d", n_fil);
+			    sprintf(col_str, "%d", n_col);
+			    sprintf(vel_f_str, "%f", (float)rand()/(float)(RAND_MAX/2)-1);
+			    sprintf(vel_c_str, "%f", (float)rand()/(float)(RAND_MAX/2)-1);
+			    sprintf(pos_f_str, "%d", f);
+			    sprintf(pos_c_str, "%d", c);
+			    sprintf(f_pil_str, "%d", f);
+			    sprintf(c_pil_str, "%d", c);
+			    sprintf(nblocs_str, "%d", n_b);
+			    sprintf(npils_str, "%d", n_p);
+			    sprintf(retard_str, "%d", retard);
+			    sprintf(c_pal_str, "%d", c_p);
+			    sprintf(f_pal_str, "%d", f_p);
+			    sprintf(dirPaleta_str, "%d", dir_p);
+			    sprintf(fi1_str, "%d", fi_1);
+			    sprintf(id_sem_str, "%d", id_sem);
+				sprintf(id_bustia_str, "%d", id_bustia);
+				sprintf(temp_str, "%d", temporitzador);
+				sprintf(start_str, "%d", start_t);
+				sprintf(id_pilota_str, "%d", id_pilota);
 	
 				execlp("./pilota4", "pilota4", id_str, id_mem_tauler_str, fil_str,
 					col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
@@ -153,15 +131,10 @@ void comprovar_bloc(int f, int c)
 		    {
 		    	fprintf(stderr, "Hi ha hagut un error en la creacio del proces\n");
 		    }
-		   	//waitS(id_sem);
 			(*num_pilotes)++;
 			num_fills++;
-			//pthread_mutex_unlock(&mutex);
-			//signalS(id_sem);
 		}
-	//waitS(id_sem);
 	(*nblocs)--;
-	//signalS(id_sem);
 	}
 }
 
@@ -239,8 +212,6 @@ corresponent   (id   ‘1’   per   la   primera,   ‘2’   per   la   segona
 int main(int n_args, char *ll_args[])
 //void * mou_pilota(void * ind)
 {
-	
-	//struct mens mensaje;
 	num_fills = 0;
 	int fi2 = 0, fi3 = 0;
 	/* Parsing arguments */
@@ -283,8 +254,6 @@ int main(int n_args, char *ll_args[])
 	int f_h, c_h;
 	float vel_f_n;
 	char rh, rv, rd, no;
-	//int in = (intptr_t)ind;
-	fprintf(stderr, "%d\t\t%d\t\t%d\t\t%d\n", *id, *num_pilotes, identificador, ind);
 	
 	do									/* Bucle pelota */
 	{
@@ -292,8 +261,6 @@ int main(int n_args, char *ll_args[])
 		{
 			waitS(id_sem);
 			receiveM(id_bustia, &vel_f_n);
-			//receiveM(id_bustia, &mensaje);
-			//vel_c=0;
 			if (vel_f_n > vel_f)
 			{
 				vel_f = vel_f_n * 1.25;
@@ -303,7 +270,6 @@ int main(int n_args, char *ll_args[])
 					vel_f=-1;
 
 			}
-
 			else if (vel_f_n < vel_f)
 				vel_f = vel_f_n;
 		}
@@ -317,9 +283,7 @@ int main(int n_args, char *ll_args[])
 			if (f_h != f_pil) 					/* provar rebot vertical */
 			{
 				waitS(id_sem);
-				//pthread_mutex_lock(&mutex);
 				rv = win_quincar(f_h, c_pil);			/* veure si hi ha algun obstacle */
-				//pthread_mutex_unlock(&mutex);
 				signalS(id_sem);
 				if (rv != ' ') 					/* si hi ha alguna cosa */
 				{
@@ -340,9 +304,7 @@ int main(int n_args, char *ll_args[])
 			if (c_h != c_pil) /* provar rebot horitzontal */
 			{
 				waitS(id_sem);
-				//pthread_mutex_lock(&mutex);
 				rh = win_quincar(f_pil, c_h);	/* veure si hi ha algun obstacle */
-				//pthread_mutex_unlock(&mutex);
 				signalS(id_sem);
 
 				if (rh != ' ') /* si hi ha algun obstacle */
@@ -359,9 +321,7 @@ int main(int n_args, char *ll_args[])
 			if ((f_h != f_pil) && (c_h != c_pil)) /* provar rebot diagonal */
 			{
 				waitS(id_sem);
-				//pthread_mutex_lock(&mutex);
 				rd = win_quincar(f_h, c_h);
-				//pthread_mutex_unlock(&mutex);
 				signalS(id_sem);
 				if (rd != ' ') /* si hi ha obstacle */
 				{
@@ -378,42 +338,30 @@ int main(int n_args, char *ll_args[])
 
 			/* mostrar la pilota a la nova posició */
 			waitS(id_sem);
-			//pthread_mutex_lock(&mutex);
 			no = win_quincar(f_h, c_h);
-			//pthread_mutex_unlock(&mutex);
 			signalS(id_sem);
 			if (no == ' ')
 			{	/* verificar posicio definitiva *//* si no hi ha obstacle */
 				waitS(id_sem);
-				//pthread_mutex_lock(&mutex);
 				win_escricar(f_pil, c_pil, ' ', NO_INV);	/* esborra pilota */
-				//pthread_mutex_unlock(&mutex);
 				signalS(id_sem);
 				pos_f += vel_f;
 				pos_c += vel_c;
 				f_pil = f_h;
 				c_pil = c_h;	/* actualitza posicio actual */
 				waitS(id_sem);
-				//pthread_mutex_lock(&mutex);
 				if (f_pil != n_fil - 1)	/* si no surt del taulell, */
 				{	
 					if ((*temp) == 0)
-					{
-						//pthread_mutex_lock(&mutex);
 						win_escricar(f_pil, c_pil, 48+ind, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+ind*/
-						//pthread_mutex_unlock(&mutex);	
-					}
 					else 
 						win_escricar(f_pil, c_pil, 48+ind, NO_INV);	/* imprimeix pilota invertida*/
 				}
 				else
 				{
-					//pthread_mutex_lock(&mutex);
 					(*num_pilotes)--;
-					//pthread_mutex_unlock(&mutex);
 					fi3 = 1;
 				}
-				//pthread_mutex_unlock(&mutex);
 				signalS(id_sem);
 			}
 		}
@@ -423,22 +371,18 @@ int main(int n_args, char *ll_args[])
 			pos_c += vel_c;
 		}
 		waitS(id_sem);
-		//pthread_mutex_lock(&mutex);
 		fi2 = ((*nblocs) == 0 || (*num_pilotes) == 0);
-		//pthread_mutex_unlock(&mutex);
 		signalS(id_sem);
-    	
 		win_retard(retard);
 
 	} while(!fi3 && !fi2 && !*(fi1)); /* fer bucle fins que la pilota surti de la porteria i llavors acabar el proces????? */
 	int i;
 	int stat;
 	vel_f_n = vel_f;
-	//mensaje.vel_f_n = vel_f;
-	//mensaje.vel_c_n = vel_c;
-	for (i=0; i<=*num_pilotes-1; i++){
+
+	for (i=0; i<=*num_pilotes-1; i++)
+	{
 		signalS(id_sem);
-		//sendM(id_bustia, &mensaje, sizeof mensaje);
 		sendM(id_bustia, &vel_f_n, sizeof vel_f_n);
 	}
 
