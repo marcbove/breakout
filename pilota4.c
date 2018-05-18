@@ -39,6 +39,7 @@ int dir_p, c_p, f_p, *fi1, fi_1;
 int id_sem, id_bustia;
 int *temp, temporitzador, start_t;
 clock_t *start_time;
+int *id, id_pilota, identificador;
 
 
 struct mens{
@@ -101,16 +102,23 @@ void comprovar_bloc(int f, int c)
 			char id_str[SIZE_ARRAY], fil_str[SIZE_ARRAY], col_str[SIZE_ARRAY];
 			char id_mem_tauler_str[SIZE_ARRAY], vel_f_str[SIZE_ARRAY], vel_c_str[SIZE_ARRAY];
 			char f_pil_str[SIZE_ARRAY], c_pil_str[SIZE_ARRAY];
-			char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY];
+			char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY], id_pilota_str[SIZE_ARRAY];
 			char nblocs_str[SIZE_ARRAY], npils_str[SIZE_ARRAY], retard_str[SIZE_ARRAY];
 			char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY], fi1_str[SIZE_ARRAY];
 			char id_sem_str[SIZE_ARRAY], id_bustia_str[SIZE_ARRAY], temp_str[SIZE_ARRAY], start_str[SIZE_ARRAY];
+			
+			//ind = (*id);
+			(*id)++;
+			//ind ++;
+			//fprintf(stderr, "\t\t%d\t\t%d\t\t%d\t\t%d\n", *id, *num_pilotes, identificador, ind);
+			
 			
 			tpid[num_fills] = fork();
 			
 			if (tpid[num_fills] == 0)   /* Es tracta del proces fill */
 			{
-				sprintf (id_str, "%d", n_p);
+				//ind++;
+				sprintf (id_str, "%d", (*id));
 			    sprintf (id_mem_tauler_str, "%d", id_mem_tauler);
 			    sprintf (fil_str, "%d", n_fil);
 			    sprintf (col_str, "%d", n_col);
@@ -131,10 +139,13 @@ void comprovar_bloc(int f, int c)
 				sprintf (id_bustia_str, "%d", id_bustia);
 				sprintf (temp_str, "%d", temporitzador);
 				sprintf (start_str, "%d", start_t);
+				sprintf (id_pilota_str, "%d", id_pilota);
 	
 				execlp("./pilota4", "pilota4", id_str, id_mem_tauler_str, fil_str,
 					col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
-					c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, dirPaleta_str, fi1_str,  id_sem_str, id_bustia_str, temp_str, start_str, (char *)0);
+					c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, 
+					dirPaleta_str, fi1_str,  id_sem_str, id_bustia_str, temp_str, 
+					start_str, id_pilota_str, (char *)0);
 		        fprintf(stderr, "Error: No puc executar el proces fill \'pilota4\' \n");
 		        exit(1);  /* Retornem error */
 			}
@@ -224,14 +235,14 @@ float control_impacte2(int c_pil, float velc0)
 /* La funcio retornarà 1 si la pilota surt de la porteria, 0 altrament */
 /* funcio per moure la pilota: El valor que es passa pel paràmetre ind serà un enter que indicarà l’ordre de creació de les pilotes (0 -> primera, 1 -> segona, etc.). Aquest paràmetre servirà per accedir
 a   la   taula   global   d’informació   de   les   pilotes,   així   com   per   escriure   el   caràcter
-corresponent   (identificador   ‘1’   per   la   primera,   ‘2’   per   la   segona,   etc.). */
+corresponent   (id   ‘1’   per   la   primera,   ‘2’   per   la   segona,   etc.). */
 int main(int n_args, char *ll_args[])
 //void * mou_pilota(void * ind)
 {
 	
 	//struct mens mensaje;
 	num_fills = 0;
-	int fi2 = 0, fi3 = 0, id;
+	int fi2 = 0, fi3 = 0;
 	/* Parsing arguments */
 	ind = atoi(ll_args[1]);
 	id_mem_tauler = atoi(ll_args[2]);
@@ -254,6 +265,7 @@ int main(int n_args, char *ll_args[])
 	id_bustia = atoi(ll_args[19]);
 	temporitzador = atoi(ll_args[20]);
 	start_t = atoi(ll_args[21]);
+	id_pilota = atoi(ll_args[22]);
 	
     void * addr_tauler = map_mem(id_mem_tauler);
     win_set(addr_tauler, n_fil, n_col);
@@ -266,12 +278,14 @@ int main(int n_args, char *ll_args[])
 	fi1 = map_mem(fi_1);
 	temp = map_mem(temporitzador);
 	start_time = map_mem(start_t);
+	id = map_mem(id_pilota);
 
 	int f_h, c_h;
 	float vel_f_n;
 	char rh, rv, rd, no;
 	//int in = (intptr_t)ind;
-	id=*num_pilotes;
+	fprintf(stderr, "%d\t\t%d\t\t%d\t\t%d\n", *id, *num_pilotes, identificador, ind);
+	
 	do									/* Bucle pelota */
 	{
 		if(sem_value(id_sem)>1)
@@ -386,11 +400,11 @@ int main(int n_args, char *ll_args[])
 					if ((*temp) == 0)
 					{
 						//pthread_mutex_lock(&mutex);
-						win_escricar(f_pil, c_pil, 48+id, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+ind*/
+						win_escricar(f_pil, c_pil, 48+ind, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+ind*/
 						//pthread_mutex_unlock(&mutex);	
 					}
 					else 
-						win_escricar(f_pil, c_pil, 48+id, NO_INV);	/* imprimeix pilota inve*/
+						win_escricar(f_pil, c_pil, 48+ind, NO_INV);	/* imprimeix pilota invertida*/
 				}
 				else
 				{
@@ -414,7 +428,6 @@ int main(int n_args, char *ll_args[])
 		//pthread_mutex_unlock(&mutex);
 		signalS(id_sem);
     	
-
 		win_retard(retard);
 
 	} while(!fi3 && !fi2 && !*(fi1)); /* fer bucle fins que la pilota surti de la porteria i llavors acabar el proces????? */

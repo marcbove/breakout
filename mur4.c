@@ -121,7 +121,7 @@ int *f_pal, *c_pal, f_p, c_p;		/* posicio del primer caracter de la paleta */
 int f_pil, c_pil;		/* posicio de la pilota, en valor enter */
 float pos_f, pos_c;		/* posicio de la pilota, en valor real */
 float vel_f, vel_c;		/* velocitat de la pilota, en valor real */
-
+int *identificador, id_pilota;
 int *nblocs, n_b;
 int *dirPaleta, dir_p;
 int retard;			/* valor del retard de moviment, en mil.lisegons */
@@ -308,7 +308,6 @@ void mostra_final(char *miss)
 void * temporitza(void * nul)
 {
 	do{
-		sleep(1);
 		waitS(id_sem);
 		if((*temp)!=0)
 		{
@@ -316,6 +315,7 @@ void * temporitza(void * nul)
 		}
 		segons++;
 		signalS(id_sem);
+		sleep(1);
 	}while(!(*fi1) && !fi2);
 	return ((void *) 0);
 }
@@ -410,18 +410,24 @@ fi_1 = ini_mem(sizeof(int));/* crear zona mem. compartida */
 fi1 = map_mem(fi_1);/* obtenir adreça mem. compartida */
 *fi1 = 0;/* inicialitza variable compartida */
 
-temporitzador =ini_mem(sizeof(int));
+temporitzador = ini_mem(sizeof(int));
 temp = map_mem(temporitzador);
 *temp = 0;
+
+id_pilota = ini_mem(sizeof(int));
+identificador = map_mem(id_pilota);
+*identificador = 1;
+
 
 start_t = ini_mem(sizeof(int));
 start_time = map_mem(start_t);
 *start_time=0;
+
 int i;
 FILE *fit_conf;
 
-
 id_sem = ini_sem(1);		/* creacio semafor */
+
 	if ((n_args != 2) && (n_args != 3)) /* si numero d'arguments incorrecte */
 	{
 		i = 0;
@@ -466,7 +472,7 @@ id_sem = ini_sem(1);		/* creacio semafor */
 	char id_str[SIZE_ARRAY], fil_str[SIZE_ARRAY], col_str[SIZE_ARRAY];
 	char id_mem_tauler_str[SIZE_ARRAY], vel_f_str[SIZE_ARRAY], vel_c_str[SIZE_ARRAY];
 	char f_pil_str[SIZE_ARRAY], c_pil_str[SIZE_ARRAY];
-	char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY];
+	char pos_f_str[SIZE_ARRAY], pos_c_str[SIZE_ARRAY], id_pilota_str[SIZE_ARRAY];
 	char nblocs_str[SIZE_ARRAY], npils_str[SIZE_ARRAY], retard_str[SIZE_ARRAY];
 	char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY], fi1_str[SIZE_ARRAY];
 	char id_sem_str[SIZE_ARRAY], id_bustia_str[SIZE_ARRAY], temp_str[SIZE_ARRAY], start_str[SIZE_ARRAY];
@@ -484,7 +490,7 @@ id_sem = ini_sem(1);		/* creacio semafor */
 
 	if (tpid[0] == (pid_t)0)   /* Es tracta del proces fill */
   	{
-  		sprintf (id_str, "%d", 0);
+  		sprintf (id_str, "%d", 1);
       	sprintf (id_mem_tauler_str, "%d", id_mem_tauler);
       	sprintf (fil_str, "%d", n_fil);
       	sprintf (col_str, "%d", n_col);
@@ -505,10 +511,13 @@ id_sem = ini_sem(1);		/* creacio semafor */
 		sprintf (id_bustia_str, "%d", id_bustia);
 		sprintf (temp_str, "%d", temporitzador);
 		sprintf (start_str, "%d", start_t);
+		sprintf (id_pilota_str, "%d", id_pilota);
 
 		execlp("./pilota4", "pilota4", id_str, id_mem_tauler_str, fil_str,
 			col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
-			c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, dirPaleta_str, fi1_str, id_sem_str, id_bustia_str, temp_str, start_str, (char *)0);
+			c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, 
+			dirPaleta_str, fi1_str, id_sem_str, id_bustia_str, temp_str, 
+			start_str, id_pilota_str, (char *)0);
       	fprintf(stderr, "Error: No puc executar el proces fill \'pilota3\' \n");
       	exit(1);  /* Retornem error */
 	}
@@ -570,6 +579,7 @@ id_sem = ini_sem(1);		/* creacio semafor */
 		sprintf(tiempo, "GAME OVER, Tiempo: %02d:%02d", minuts, segons);
 		mostra_final(tiempo);
 	}
+	win_update();
 	
 	elim_mem(id_mem_tauler);
 	elim_mem(n_p);
@@ -580,6 +590,8 @@ id_sem = ini_sem(1);		/* creacio semafor */
 	elim_mem(temporitzador);
 	elim_mem(start_t);
 	elim_mem(fi_1);
+	elim_mem(id_pilota);
+
 	elim_sem(id_sem);
 	elim_mis(id_bustia);
 	win_fi();		/* tanca les curses */
