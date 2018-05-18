@@ -33,3 +33,5 @@ void elim_sem (int id_sem);
 void waitS (int id_sem);
 
 void signalS (int id_sem);
+
+int sem_value (int id_sem);
