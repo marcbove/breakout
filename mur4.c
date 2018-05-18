@@ -177,7 +177,7 @@ int carrega_configuracio(FILE * fit)
 
 	}
 	fclose(fit);
-	
+
 	*num_pilotes = i-1;
 
 	return(ret);
@@ -191,7 +191,7 @@ int inicialitza_joc(void)
 	int i, retwin;
 	int i_port, f_port;					/* inici i final de porteria */
 	int c, nb, offset;
-	
+
 	retwin = win_ini(&n_fil, &n_col, '+', INVERS);			/* intenta crear taulell */
 
 	if (retwin < 0)
@@ -302,6 +302,7 @@ void mostra_final(char *miss)
 void * temporitza(void * nul)
 {
 	do{
+		while(sem_value(id_sem)>1);
 		waitS(id_sem);
 		if((*temp)!=0)
 		{
@@ -366,6 +367,7 @@ void * mou_paleta(void * nul)
 
 	return ((void *) 0);
 }
+
 
 /* programa principal */
 int main(int n_args, char *ll_args[])
@@ -464,10 +466,10 @@ id_sem = ini_sem(1);		/* creacio semafor */
 	char nblocs_str[SIZE_ARRAY], npils_str[SIZE_ARRAY], retard_str[SIZE_ARRAY];
 	char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY], fi1_str[SIZE_ARRAY];
 	char id_sem_str[SIZE_ARRAY], id_bustia_str[SIZE_ARRAY], temp_str[SIZE_ARRAY], start_str[SIZE_ARRAY];
-		
+
 	id_bustia = ini_mis();		/* creacio bustia IPC */
 	segons=0;
-	
+
 	pthread_create(&tid[0],NULL, &mou_paleta, (void *) NULL);
 	pthread_create(&tid[1],NULL, &temporitza, (void *) NULL);
 
@@ -500,18 +502,18 @@ id_sem = ini_sem(1);		/* creacio semafor */
 
 		execlp("./pilota4", "pilota4", id_str, id_mem_tauler_str, fil_str,
 			col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
-			c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, 
-			dirPaleta_str, fi1_str, id_sem_str, id_bustia_str, temp_str, 
+			c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str,
+			dirPaleta_str, fi1_str, id_sem_str, id_bustia_str, temp_str,
 			start_str, id_pilota_str, (char *)0);
       	fprintf(stderr, "Error: No puc executar el proces fill \'pilota3\' \n");
       	exit(1);  /* Retornem error */
 	}
-  	else 
+  	else
 	  	if (tpid[0] <  0 )     /* ERROR*/
 	  	{
 	    	fprintf(stderr, "Hi ha hagut un error en la creacio del proces");
 	  	}
-		
+
 	int minuts = 0;		/* variable segundos y minutos inicializados a 0 */
 	char tiempo[LONGMISS];			/* variable 'String' para tiempo del tamaño maximo que se puede imprimir por pantalla */
 
@@ -519,6 +521,7 @@ id_sem = ini_sem(1);		/* creacio semafor */
 	{
 		if (segons >= 60)
 		{
+			while(sem_value(id_sem)>1);
 			waitS(id_sem);
 			minuts ++;
 			segons=0;
@@ -537,7 +540,7 @@ id_sem = ini_sem(1);		/* creacio semafor */
 			sprintf(tiempo, "Tiempo: %02d:%02d", minuts, segons);
 
 		win_escristr(tiempo);
-		
+
 		//pthread_mutex_unlock(&mutex);
 		win_update();
 		signalS(id_sem);
@@ -550,7 +553,7 @@ id_sem = ini_sem(1);		/* creacio semafor */
 	pthread_join(tid[0], 0);
 	pthread_join(tid[1], 0);
 	waitpid(tpid[0], &stat, 0);
-	
+
 
 	if ( *nblocs == 0)
 	{
@@ -563,7 +566,7 @@ id_sem = ini_sem(1);		/* creacio semafor */
 		mostra_final(tiempo);
 	}
 	win_update();
-	
+
 	elim_mem(id_mem_tauler);
 	elim_mem(n_p);
 	elim_mem(n_b);

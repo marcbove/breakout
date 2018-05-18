@@ -56,7 +56,7 @@ void comprovar_bloc(int f, int c)
 	{
 		win_escricar(f, c, ' ', NO_INV);
 	}
-	
+
 	if (quin == BLKCHAR || quin == FRNTCHAR || quin == TEMPCHAR)
 	{
 		col = c;
@@ -73,12 +73,12 @@ void comprovar_bloc(int f, int c)
 		}
 
 		if (quin == FRNTCHAR)
-			(*temp) = 5;		
+			(*temp) = 5;
 
 		if (quin == TEMPCHAR)
 		{
 			if ((*temp)!=0)
-				(*temp) = (*temp) + 5;		
+				(*temp) = (*temp) + 5;
 		}
 
 		if (quin == BLKCHAR)
@@ -90,10 +90,10 @@ void comprovar_bloc(int f, int c)
 			char nblocs_str[SIZE_ARRAY], npils_str[SIZE_ARRAY], retard_str[SIZE_ARRAY];
 			char c_pal_str[SIZE_ARRAY], f_pal_str[SIZE_ARRAY], dirPaleta_str[SIZE_ARRAY], fi1_str[SIZE_ARRAY];
 			char id_sem_str[SIZE_ARRAY], id_bustia_str[SIZE_ARRAY], temp_str[SIZE_ARRAY], start_str[SIZE_ARRAY];
-			
+
 			(*id)++;
 			tpid[num_fills] = fork();
-			
+
 			if (tpid[num_fills] == 0)   /* Es tracta del proces fill */
 			{
 				sprintf(id_str, "%d", (*id));
@@ -118,11 +118,11 @@ void comprovar_bloc(int f, int c)
 				sprintf(temp_str, "%d", temporitzador);
 				sprintf(start_str, "%d", start_t);
 				sprintf(id_pilota_str, "%d", id_pilota);
-	
+
 				execlp("./pilota4", "pilota4", id_str, id_mem_tauler_str, fil_str,
 					col_str, vel_f_str, vel_c_str, pos_f_str, pos_c_str, f_pil_str,
-					c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str, 
-					dirPaleta_str, fi1_str,  id_sem_str, id_bustia_str, temp_str, 
+					c_pil_str, nblocs_str, npils_str, retard_str, c_pal_str, f_pal_str,
+					dirPaleta_str, fi1_str,  id_sem_str, id_bustia_str, temp_str,
 					start_str, id_pilota_str, (char *)0);
 		        fprintf(stderr, "Error: No puc executar el proces fill \'pilota4\' \n");
 		        exit(1);  /* Retornem error */
@@ -204,7 +204,26 @@ float control_impacte2(int c_pil, float velc0)
 	return vel_c;
 }
 
+void recep_missatges()
+{
+	float vel_f_n;
 
+	waitS(id_sem);
+	receiveM(id_bustia, &vel_f_n);
+	if (vel_f_n > vel_f)
+	{
+		vel_f = vel_f_n * 1.25;
+		if (vel_f>1)
+			vel_f=1;
+		if (vel_f < -1)
+			vel_f=-1;
+
+	}
+	else if (vel_f_n < vel_f)
+		vel_f = vel_f_n;
+
+		while(sem_value(id_sem)>1);
+}
 /* La funcio retornarà 1 si la pilota surt de la porteria, 0 altrament */
 /* funcio per moure la pilota: El valor que es passa pel paràmetre ind serà un enter que indicarà l’ordre de creació de les pilotes (0 -> primera, 1 -> segona, etc.). Aquest paràmetre servirà per accedir
 a   la   taula   global   d’informació   de   les   pilotes,   així   com   per   escriure   el   caràcter
@@ -237,10 +256,10 @@ int main(int n_args, char *ll_args[])
 	temporitzador = atoi(ll_args[20]);
 	start_t = atoi(ll_args[21]);
 	id_pilota = atoi(ll_args[22]);
-	
+
     void * addr_tauler = map_mem(id_mem_tauler);
     win_set(addr_tauler, n_fil, n_col);
-   
+
 	num_pilotes = map_mem(n_p);
 	nblocs = map_mem(n_b);
 	c_pal = map_mem(c_p);
@@ -254,26 +273,10 @@ int main(int n_args, char *ll_args[])
 	int f_h, c_h;
 	float vel_f_n;
 	char rh, rv, rd, no;
-	
+
 	do									/* Bucle pelota */
 	{
-		if(sem_value(id_sem)>1)
-		{
-			waitS(id_sem);
-			receiveM(id_bustia, &vel_f_n);
-			if (vel_f_n > vel_f)
-			{
-				vel_f = vel_f_n * 1.25;
-				if (vel_f>1)
-					vel_f=1;
-				if (vel_f < -1)
-					vel_f=-1;
 
-			}
-			else if (vel_f_n < vel_f)
-				vel_f = vel_f_n;
-		}
-		while(sem_value(id_sem)>1);
 		f_h = pos_f + vel_f;				/* posicio hipotetica de la pilota (entera) */
 		c_h = pos_c + vel_c;
 		rh = rv = rd = ' ';
@@ -282,11 +285,16 @@ int main(int n_args, char *ll_args[])
 		/* si posicio hipotetica no coincideix amb la posicio actual */
 			if (f_h != f_pil) 					/* provar rebot vertical */
 			{
+				if(sem_value(id_sem)>1)
+					recep_missatges();
+
 				waitS(id_sem);
 				rv = win_quincar(f_h, c_pil);			/* veure si hi ha algun obstacle */
 				signalS(id_sem);
 				if (rv != ' ') 					/* si hi ha alguna cosa */
 				{
+					if(sem_value(id_sem)>1)
+						recep_missatges();
 					waitS(id_sem);
 					comprovar_bloc(f_h, c_pil);
 					signalS(id_sem);
@@ -303,12 +311,16 @@ int main(int n_args, char *ll_args[])
 
 			if (c_h != c_pil) /* provar rebot horitzontal */
 			{
+				if(sem_value(id_sem)>1)
+					recep_missatges();
 				waitS(id_sem);
 				rh = win_quincar(f_pil, c_h);	/* veure si hi ha algun obstacle */
 				signalS(id_sem);
 
 				if (rh != ' ') /* si hi ha algun obstacle */
 				{
+					if(sem_value(id_sem)>1)
+						recep_missatges();
 					waitS(id_sem);
 					comprovar_bloc(f_pil, c_h);
 					signalS(id_sem);
@@ -320,11 +332,15 @@ int main(int n_args, char *ll_args[])
 
 			if ((f_h != f_pil) && (c_h != c_pil)) /* provar rebot diagonal */
 			{
+				if(sem_value(id_sem)>1)
+					recep_missatges();
 				waitS(id_sem);
 				rd = win_quincar(f_h, c_h);
 				signalS(id_sem);
 				if (rd != ' ') /* si hi ha obstacle */
 				{
+					if(sem_value(id_sem)>1)
+						recep_missatges();
 					waitS(id_sem);
 					comprovar_bloc(f_h, c_h);
 					signalS(id_sem);
@@ -337,11 +353,15 @@ int main(int n_args, char *ll_args[])
 			}
 
 			/* mostrar la pilota a la nova posició */
+			if(sem_value(id_sem)>1)
+				recep_missatges();
 			waitS(id_sem);
 			no = win_quincar(f_h, c_h);
 			signalS(id_sem);
 			if (no == ' ')
 			{	/* verificar posicio definitiva *//* si no hi ha obstacle */
+				if(sem_value(id_sem)>1)
+					recep_missatges();
 				waitS(id_sem);
 				win_escricar(f_pil, c_pil, ' ', NO_INV);	/* esborra pilota */
 				signalS(id_sem);
@@ -349,12 +369,14 @@ int main(int n_args, char *ll_args[])
 				pos_c += vel_c;
 				f_pil = f_h;
 				c_pil = c_h;	/* actualitza posicio actual */
+				if(sem_value(id_sem)>1)
+					recep_missatges();
 				waitS(id_sem);
 				if (f_pil != n_fil - 1)	/* si no surt del taulell, */
-				{	
+				{
 					if ((*temp) == 0)
 						win_escricar(f_pil, c_pil, 48+ind, INVERS);	/* imprimeix pilota on caracter que es passa es el codi ascii de 0+ind*/
-					else 
+					else
 						win_escricar(f_pil, c_pil, 48+ind, NO_INV);	/* imprimeix pilota invertida*/
 				}
 				else
@@ -370,6 +392,8 @@ int main(int n_args, char *ll_args[])
 			pos_f += vel_f;
 			pos_c += vel_c;
 		}
+		if(sem_value(id_sem)>1)
+			recep_missatges();
 		waitS(id_sem);
 		fi2 = ((*nblocs) == 0 || (*num_pilotes) == 0);
 		signalS(id_sem);
