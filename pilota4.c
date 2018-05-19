@@ -181,6 +181,7 @@ void control_impacte(void)
 			}
 		}
 		// Aqui otra seccion critica
+		while(sem_value(id_sem)>1);
 		waitS(id_sem);
 		(*dirPaleta)=0;							/* reset perque ja hem aplicat l'efecte */
 		signalS(id_sem);
